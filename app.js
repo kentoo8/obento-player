@@ -44,19 +44,28 @@
   const audioOffIcon = $('#audioOffIcon');
   const audioOnIcon = $('#audioOnIcon');
   const fullscreenBtn = $('#fullscreenBtn');
-  const fullscreenEnterIcon = $('#fullscreenEnterIcon');
-  const fullscreenExitIcon = $('#fullscreenExitIcon');
+  const exitCinemaBtn = $('#exitCinemaBtn');
 
   // ===== Video File Management =====
 
+  const VIDEO_EXTS = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
+
   function addVideoFiles(files) {
-    // ブラウザが実際に再生できる形式のみ受け付ける
     const unsupported = [];
     for (const file of files) {
-      if (file.type && !file.type.startsWith('video/')) continue;
+      const isVideoType = file.type && file.type.startsWith('video/');
+      const isVideoExt = VIDEO_EXTS.test(file.name);
+      
+      if (!isVideoType && !isVideoExt) {
+        // フォルダ内などで見つかった無関係なファイル（画像など）は警告を出さずに無視
+        continue;
+      }
+
       const testVideo = document.createElement('video');
-      const canPlay = file.type ? testVideo.canPlayType(file.type) : 'maybe';
-      if (canPlay === '') {
+      const testType = file.type || `video/${file.name.split('.').pop().toLowerCase()}`;
+      const canPlay = testVideo.canPlayType(testType);
+      
+      if (canPlay === '' && file.type !== '') {
         unsupported.push(file.name);
         continue;
       }
@@ -502,14 +511,11 @@
 
   function toggleCinemaMode() {
     const isOn = document.body.classList.toggle('cinema-mode');
-    fullscreenEnterIcon.style.display = isOn ? 'none' : 'block';
-    fullscreenExitIcon.style.display = isOn ? 'block' : 'none';
-    const labelEl = fullscreenBtn.querySelector('.fs-label');
-    if (labelEl) labelEl.textContent = isOn ? '通常' : '動画のみ';
     showCinemaToast(isOn ? '動画のみ表示中 — F キーで戻る' : 'コントロール表示に戻りました');
   }
 
   fullscreenBtn.addEventListener('click', toggleCinemaMode);
+  if (exitCinemaBtn) exitCinemaBtn.addEventListener('click', toggleCinemaMode);
 
   // ===== Utility =====
 
@@ -548,10 +554,60 @@
     e.preventDefault();
     dragCounter = 0;
     dropOverlay.classList.remove('active');
-    if (e.dataTransfer.files.length > 0) {
+    
+    if (e.dataTransfer.items) {
+      handleDropItems(e.dataTransfer.items).then(files => {
+        if (files.length > 0) addVideoFiles(files);
+      });
+    } else if (e.dataTransfer.files.length > 0) {
       addVideoFiles(e.dataTransfer.files);
     }
   });
+
+  async function handleDropItems(items) {
+    const files = [];
+    const entries = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const entry = item.webkitGetAsEntry();
+        if (entry) entries.push(entry);
+      }
+    }
+    
+    for (const entry of entries) {
+      await traverseFileTree(entry, files);
+    }
+    return files;
+  }
+
+  function traverseFileTree(item, files) {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file) => {
+          files.push(file);
+          resolve();
+        });
+      } else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        const readAllEntries = () => {
+          dirReader.readEntries(async (entries) => {
+            if (entries.length > 0) {
+              for (const entry of entries) {
+                await traverseFileTree(entry, files);
+              }
+              readAllEntries(); // 残りのエントリを読み込む
+            } else {
+              resolve();
+            }
+          });
+        };
+        readAllEntries();
+      } else {
+        resolve();
+      }
+    });
+  }
 
   // File input
   fileInput.addEventListener('change', () => {

@@ -149,7 +149,7 @@
         }
       } else {
         // 長さ未取得のときは先頭のみ仮登録
-        pool.push({ videoIndex: vi, startTime: 0, key: `${vi}:0` });
+        pool.push({ videoIndex: vi, startTime: 0, key: `${vi}:0`, isUnknown: true });
       }
     });
 
@@ -473,8 +473,17 @@
     function seekAndPlay() {
       nextLayer.removeEventListener('loadedmetadata', seekAndPlay);
       nextLayer.removeEventListener('canplay', seekAndPlay);
+      
+      // 長さ未取得で作成された仮セグメントの場合、実際の長さの範囲でランダムにシーク
+      let targetTime = seg.startTime;
+      if (seg.isUnknown && nextLayer.duration > 0) {
+        targetTime = Math.random() * Math.max(0, nextLayer.duration - 2);
+        seg.startTime = targetTime;
+        seg.isUnknown = false;
+      }
+
       // セグメントの開始時間にシーク
-      const targetTime = Math.min(seg.startTime, Math.max(0, (nextLayer.duration || 0) - 1));
+      targetTime = Math.min(targetTime, Math.max(0, (nextLayer.duration || 0) - 1));
       if (isFinite(targetTime) && targetTime > 0) {
         nextLayer.currentTime = targetTime;
       }

@@ -260,15 +260,15 @@
       audioOnIcon.style.display = 'block';
       audioToggleBtn.classList.remove('audio-off');
       audioToggleBtn.classList.add('audio-on');
-      audioToggleBtn.querySelector('span') && (audioToggleBtn.querySelector('span').textContent = '音声ON');
-      // ボタンテキストノードを直接更新
-      audioToggleBtn.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ' 音声ON'; });
+      const lbl = audioToggleBtn.querySelector('.audio-label');
+      if (lbl) lbl.textContent = '音声ON';
     } else {
       audioOffIcon.style.display = 'block';
       audioOnIcon.style.display = 'none';
       audioToggleBtn.classList.add('audio-off');
       audioToggleBtn.classList.remove('audio-on');
-      audioToggleBtn.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ' ミュート'; });
+      const lbl = audioToggleBtn.querySelector('.audio-label');
+      if (lbl) lbl.textContent = 'ミュート';
     }
     updateMuteButtons();
   }

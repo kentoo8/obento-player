@@ -162,6 +162,7 @@
     cell.className = 'video-cell';
     cell.dataset.index = index;
     cell.dataset.muted = "true";
+    cell.dataset.pinned = "false";
 
     function setupLayer(isActive) {
       const video = document.createElement('video');
@@ -183,7 +184,13 @@
 
       video.addEventListener('ended', () => {
         if (video.classList.contains('active')) {
-          assignRandomSceneToCell(cell);
+          if (cell.dataset.pinned === "true") {
+            // ピン留め中は同じシーンを最初からループ再生
+            video.currentTime = 0;
+            video.play().catch(()=>{});
+          } else {
+            assignRandomSceneToCell(cell);
+          }
         }
       });
       return video;
@@ -227,7 +234,39 @@
     });
     cell.appendChild(muteBtn);
 
+    // Pin toggle
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'cell-pin-btn';
+    pinBtn.innerHTML = pinIconSVG();
+    pinBtn.title = 'ピン留め (自動切替を停止)';
+    pinBtn.addEventListener('click', () => {
+      const isPinned = cell.dataset.pinned === "true";
+      if (!isPinned) {
+        cell.dataset.pinned = "true";
+        cell.classList.add('is-pinned');
+        pinBtn.classList.add('pinned');
+        if (cell._switchTimer) {
+          clearTimeout(cell._switchTimer);
+          cell._switchTimer = null;
+        }
+      } else {
+        cell.dataset.pinned = "false";
+        cell.classList.remove('is-pinned');
+        pinBtn.classList.remove('pinned');
+        if (state.isPlaying) {
+          scheduleCellSwitch(cell, true);
+        }
+      }
+    });
+    cell.appendChild(pinBtn);
+
     return cell;
+  }
+
+  function pinIconSVG() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76v-7a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v7z"/>
+    </svg>`;
   }
 
   function muteIconSVG() {
@@ -295,6 +334,14 @@
     const usedInBatch = new Set(); // このバッチで既に使ったキー
 
     cells.forEach(cell => {
+      if (cell.dataset.pinned === "true") {
+        const activeLayer = cell.querySelector('.video-layer.active');
+        if (activeLayer && activeLayer._segKey) {
+          usedInBatch.add(activeLayer._segKey);
+        }
+        return;
+      }
+
       const seg = popSegment(usedInBatch);
       usedInBatch.add(seg.key);
       applySegmentToCell(cell, seg);
@@ -305,6 +352,7 @@
   function scheduleCellSwitch(cell, stagger = false) {
     if (cell._switchTimer) clearTimeout(cell._switchTimer);
     if (!state.isPlaying) return;
+    if (cell.dataset.pinned === "true") return;
 
     let delaySec = state.interval;
     if (stagger) {

@@ -457,6 +457,45 @@ body.cinema-mode .empty-state {
   background: rgba(0,0,0,0.7);
 }
 
+/* Cell pin toggle */
+.cell-pin-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-normal), background var(--transition-fast);
+  pointer-events: all;
+  z-index: 11;
+}
+
+.video-cell:hover .cell-pin-btn {
+  opacity: 1;
+}
+
+.cell-pin-btn:hover {
+  background: rgba(0,0,0,0.7);
+}
+
+.cell-pin-btn.pinned {
+  opacity: 1; /* Always show when pinned */
+  background: var(--accent-primary);
+}
+
+.video-cell.is-pinned {
+  box-shadow: 0 0 0 2px var(--accent-primary) !important;
+}
+
 
 
 /* ===== Empty State ===== */

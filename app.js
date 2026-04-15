@@ -16,6 +16,8 @@
     isPlaying: false,
     volume: 0.3,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
+    preloadQueue: [],     // メタデータ未取得のインデックスキュー
+    activePreloads: 0,
   };
 
   // ===== DOM Refs =====
@@ -62,7 +64,7 @@
       const idx = state.videoFiles.length;
       state.videoFiles.push({ file, url });
       state.videoDurations.push(null);
-      preloadDuration(idx); // バックグラウンドでメタデータ取得
+      enqueuePreload(idx);
     }
     if (unsupported.length > 0) {
       console.warn('再生できないファイル (ブラウザ非対応):', unsupported.join(', '));
@@ -76,16 +78,44 @@
     }
   }
 
-  // 動画の長さをバックグラウンドで取得し、プールを再ビルドする
-  function preloadDuration(index) {
-    const tmp = document.createElement('video');
-    tmp.preload = 'metadata';
-    tmp.src = state.videoFiles[index].url;
-    tmp.addEventListener('loadedmetadata', () => {
-      state.videoDurations[index] = tmp.duration;
-      tmp.src = '';
-      buildSegmentPool(); // 長さが判明したのでプール再構築
-    }, { once: true });
+  // ===== Metadata Preload Queue =====
+  const MAX_CONCURRENT_PRELOADS = 3;
+
+  function enqueuePreload(index) {
+    state.preloadQueue.push(index);
+    processPreloadQueue();
+  }
+
+  function processPreloadQueue() {
+    while (state.activePreloads < MAX_CONCURRENT_PRELOADS && state.preloadQueue.length > 0) {
+      const idx = state.preloadQueue.shift();
+      state.activePreloads++;
+      preloadDurationAsync(idx).then(() => {
+        state.activePreloads--;
+        buildSegmentPool(); // 新しく長さが判明したのでプールを更新
+        processPreloadQueue(); // 次のキューへ
+      });
+    }
+  }
+
+  function preloadDurationAsync(index) {
+    return new Promise(resolve => {
+      const tmp = document.createElement('video');
+      tmp.preload = 'metadata';
+      tmp.src = state.videoFiles[index].url;
+      
+      tmp.onloadedmetadata = () => {
+        state.videoDurations[index] = tmp.duration;
+        tmp.src = '';
+        resolve();
+      };
+      
+      tmp.onerror = () => {
+        state.videoDurations[index] = 0; // fallback
+        tmp.src = '';
+        resolve();
+      };
+    });
   }
 
   // ===== Segment Pool =====

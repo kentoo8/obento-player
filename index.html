@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi Video Player</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Drop Overlay -->
+  <div id="dropOverlay" class="drop-overlay">
+    <div class="drop-overlay-content">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <p>動画ファイルをドロップしてください</p>
+      <span class="drop-hint">mp4, webm, mov, avi, mkv</span>
+    </div>
+  </div>
+
+  <!-- Header / Controls -->
+  <header id="header">
+    <div class="header-left">
+      <h1 class="logo">
+        <span class="logo-icon">▶</span>
+        Multi Player
+      </h1>
+    </div>
+    <div class="header-center">
+      <div class="control-group">
+        <label for="intervalInput">切替間隔</label>
+        <div class="interval-control">
+          <button id="intervalDown" class="interval-btn" title="減らす">−</button>
+          <input type="number" id="intervalInput" value="10" min="1" max="300" step="1">
+          <span class="unit">秒</span>
+          <button id="intervalUp" class="interval-btn" title="増やす">+</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="gridSelect">レイアウト</label>
+        <select id="gridSelect">
+          <option value="1">1 画面</option>
+          <option value="2">2 画面</option>
+          <option value="4" selected>4 画面</option>
+          <option value="6">6 画面</option>
+          <option value="9">9 画面</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>音声</label>
+        <button id="audioToggleBtn" class="btn btn-secondary audio-off" title="音声 ON/OFF">
+          <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+          <svg id="audioOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/>
+          </svg>
+          ミュート
+        </button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.3">
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="addFilesBtn" class="btn btn-secondary" title="ファイルを追加">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        追加
+      </button>
+      <button id="playAllBtn" class="btn btn-primary" title="全て再生 / 一時停止">
+        <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+        <svg id="pauseIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+        <span id="playBtnText">再生</span>
+      </button>
+      <button id="shuffleBtn" class="btn btn-accent" title="シーンをシャッフル">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 3 21 3 21 8"/>
+          <line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/>
+          <line x1="15" y1="15" x2="21" y2="21"/>
+          <line x1="4" y1="4" x2="9" y2="9"/>
+        </svg>
+        シャッフル
+      </button>
+    </div>
+    <input type="file" id="fileInput" multiple accept="video/*" style="display:none">
+  </header>
+
+  <!-- Main video grid -->
+  <main id="videoGrid" class="video-grid grid-4">
+    <!-- Video cells are dynamically generated -->
+  </main>
+
+  <!-- Empty state -->
+  <div id="emptyState" class="empty-state">
+    <div class="empty-state-content">
+      <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+        <line x1="7" y1="2" x2="7" y2="22"/>
+        <line x1="17" y1="2" x2="17" y2="22"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+        <line x1="2" y1="7" x2="7" y2="7"/>
+        <line x1="2" y1="17" x2="7" y2="17"/>
+        <line x1="17" y1="7" x2="22" y2="7"/>
+        <line x1="17" y1="17" x2="22" y2="17"/>
+      </svg>
+      <h2>動画をドラッグ＆ドロップ</h2>
+      <p>または下のボタンからファイルを選択してください</p>
+      <button id="emptyAddBtn" class="btn btn-primary btn-lg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        動画ファイルを選択
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress bar for auto-switch -->
+  <div id="progressBar" class="progress-bar">
+    <div id="progressFill" class="progress-fill"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

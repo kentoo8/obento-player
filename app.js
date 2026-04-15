@@ -165,14 +165,36 @@
     const cell = document.createElement('div');
     cell.className = 'video-cell';
     cell.dataset.index = index;
+    cell.dataset.muted = "true";
 
-    const video = document.createElement('video');
-    video.muted = true;
-    video.loop = false;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.volume = state.volume;
-    cell.appendChild(video);
+    function setupLayer(isActive) {
+      const video = document.createElement('video');
+      video.className = isActive ? 'video-layer active' : 'video-layer';
+      video.muted = true;
+      video.loop = false;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.volume = state.volume;
+      cell.appendChild(video);
+
+      video.addEventListener('timeupdate', () => {
+        if (!video.classList.contains('active')) return;
+        const nameEl = cell.querySelector('.video-cell-name');
+        const timeEl = cell.querySelector('.video-cell-time');
+        if (video._fileName && nameEl) nameEl.textContent = video._fileName;
+        if (timeEl) timeEl.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+      });
+
+      video.addEventListener('ended', () => {
+        if (video.classList.contains('active')) {
+          assignRandomSceneToCell(cell);
+        }
+      });
+      return video;
+    }
+
+    setupLayer(true);
+    setupLayer(false);
 
     // Overlay
     const overlay = document.createElement('div');
@@ -190,33 +212,24 @@
     muteBtn.className = 'cell-mute-btn';
     muteBtn.innerHTML = muteIconSVG();
     muteBtn.addEventListener('click', () => {
-      // Unmute this one, mute all others
-      const allVideos = videoGrid.querySelectorAll('video');
-      allVideos.forEach(v => {
-        v.muted = true;
+      const isMuted = cell.dataset.muted === "true";
+      // mute all others
+      videoGrid.querySelectorAll('.video-cell').forEach(c => c.dataset.muted = "true");
+      
+      // toggle this one
+      cell.dataset.muted = isMuted ? "false" : "true";
+      
+      videoGrid.querySelectorAll('.video-cell').forEach(c => {
+        const layers = c.querySelectorAll('.video-layer');
+        const m = c.dataset.muted === "true";
+        layers.forEach(v => {
+          v.muted = m;
+          if (!m) v.volume = state.volume;
+        });
       });
-      video.muted = !video.muted;
-      if (!video.muted) {
-        video.volume = state.volume;
-      }
       updateMuteButtons();
     });
     cell.appendChild(muteBtn);
-
-    // Time update
-    video.addEventListener('timeupdate', () => {
-      const nameEl = overlay.querySelector('.video-cell-name');
-      const timeEl = overlay.querySelector('.video-cell-time');
-      if (video._fileName) {
-        nameEl.textContent = video._fileName;
-      }
-      timeEl.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
-    });
-
-    // When video ends, switch to new random scene
-    video.addEventListener('ended', () => {
-      assignRandomSceneToCell(cell);
-    });
 
     return cell;
   }
@@ -240,10 +253,9 @@
   function updateMuteButtons() {
     const cells = videoGrid.querySelectorAll('.video-cell');
     cells.forEach(cell => {
-      const video = cell.querySelector('video');
       const btn = cell.querySelector('.cell-mute-btn');
-      if (video && btn) {
-        btn.innerHTML = video.muted ? muteIconSVG() : unmuteIconSVG();
+      if (btn) {
+        btn.innerHTML = cell.dataset.muted === "true" ? muteIconSVG() : unmuteIconSVG();
       }
     });
   }
@@ -251,9 +263,12 @@
   // 全体音声の ON/OFF を設定する
   function setAudioState(on) {
     state.isAudioOn = on;
-    videoGrid.querySelectorAll('video').forEach(v => {
-      v.muted = !on;
-      if (on) v.volume = state.volume;
+    videoGrid.querySelectorAll('.video-cell').forEach(cell => {
+      cell.dataset.muted = on ? "false" : "true";
+      cell.querySelectorAll('.video-layer').forEach(v => {
+        v.muted = !on;
+        if (on) v.volume = state.volume;
+      });
     });
     if (on) {
       audioOffIcon.style.display = 'none';
@@ -299,58 +314,69 @@
     const activeCells = videoGrid.querySelectorAll('.video-cell');
     const activeKeys = new Set();
     activeCells.forEach(c => {
-      const v = c.querySelector('video');
-      if (c !== cell && v && v._segKey) activeKeys.add(v._segKey);
+      if (c !== cell) {
+        c.querySelectorAll('.video-layer.active').forEach(v => {
+          if (v._segKey) activeKeys.add(v._segKey);
+        });
+      }
     });
 
     const seg = popSegment(activeKeys);
     applySegmentToCell(cell, seg);
   }
 
-  // セグメント情報をセルに実際に適用する
   function applySegmentToCell(cell, seg) {
-    const video = cell.querySelector('video');
+    const layers = cell.querySelectorAll('.video-layer');
+    const activeLayer = cell.querySelector('.video-layer.active');
+    const nextLayer = Array.from(layers).find(v => v !== activeLayer) || layers[0];
+
     const chosen = state.videoFiles[seg.videoIndex];
     if (!chosen) return;
 
-    video._fileName = chosen.file.name;
-    video._segKey = seg.key; // 重複チェック用
+    nextLayer._fileName = chosen.file.name;
+    nextLayer._segKey = seg.key; // 重複チェック用
 
     function seekAndPlay() {
-      video.removeEventListener('loadedmetadata', seekAndPlay);
-      video.removeEventListener('canplay', seekAndPlay);
-      // セグメントの開始時間にシーク（duration の範囲内に収める）
-      const targetTime = Math.min(seg.startTime, Math.max(0, (video.duration || 0) - 1));
+      nextLayer.removeEventListener('loadedmetadata', seekAndPlay);
+      nextLayer.removeEventListener('canplay', seekAndPlay);
+      // セグメントの開始時間にシーク
+      const targetTime = Math.min(seg.startTime, Math.max(0, (nextLayer.duration || 0) - 1));
       if (isFinite(targetTime) && targetTime > 0) {
-        video.currentTime = targetTime;
+        nextLayer.currentTime = targetTime;
       }
       if (state.isPlaying) {
-        video.play().catch(() => {});
+        nextLayer.play().catch(() => {});
+      }
+      
+      // クロスフェード実行
+      nextLayer.classList.add('active');
+      if (activeLayer) {
+        activeLayer.classList.remove('active');
+        setTimeout(() => {
+          activeLayer.pause();
+          activeLayer._segKey = null; // キー解放
+        }, 800); // 0.8s は CSS transition と合わせる
       }
     }
 
-    video.addEventListener('loadedmetadata', seekAndPlay);
-    video.addEventListener('canplay', seekAndPlay);
-    video.src = chosen.url;
-
-    cell.classList.add('switching');
-    setTimeout(() => cell.classList.remove('switching'), 400);
+    nextLayer.addEventListener('loadedmetadata', seekAndPlay);
+    nextLayer.addEventListener('canplay', seekAndPlay);
+    nextLayer.src = chosen.url;
   }
 
   // ===== Playback Control =====
 
   function togglePlay() {
     state.isPlaying = !state.isPlaying;
-    const videos = videoGrid.querySelectorAll('video');
 
     if (state.isPlaying) {
-      videos.forEach(v => v.play().catch(() => {}));
+      videoGrid.querySelectorAll('.video-layer.active').forEach(v => v.play().catch(() => {}));
       startTimer();
       playIcon.style.display = 'none';
       pauseIcon.style.display = 'block';
       playBtnText.textContent = '停止';
     } else {
-      videos.forEach(v => v.pause());
+      videoGrid.querySelectorAll('.video-layer').forEach(v => v.pause());
       stopTimer();
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
@@ -529,7 +555,7 @@
     if (!state.isAudioOn) {
       setAudioState(true); // 音量を動かしたら自動でON
     }
-    videoGrid.querySelectorAll('video').forEach(v => {
+    videoGrid.querySelectorAll('.video-layer').forEach(v => {
       if (!v.muted) {
         v.volume = state.volume;
       }
@@ -560,7 +586,7 @@
         e.preventDefault();
         state.volume = Math.min(1, state.volume + 0.05);
         volumeSlider.value = state.volume;
-        videoGrid.querySelectorAll('video').forEach(v => {
+        videoGrid.querySelectorAll('.video-layer').forEach(v => {
           if (!v.muted) v.volume = state.volume;
         });
         break;
@@ -568,7 +594,7 @@
         e.preventDefault();
         state.volume = Math.max(0, state.volume - 0.05);
         volumeSlider.value = state.volume;
-        videoGrid.querySelectorAll('video').forEach(v => {
+        videoGrid.querySelectorAll('.video-layer').forEach(v => {
           if (!v.muted) v.volume = state.volume;
         });
         break;

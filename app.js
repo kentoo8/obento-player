@@ -492,25 +492,27 @@
     }
   });
 
-  // Interval
   intervalInput.addEventListener('change', () => {
-    state.interval = Math.max(1, Math.min(300, parseInt(intervalInput.value, 10) || 10));
+    state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));
+    // round to nearest 5 if you want to be strict, but just clamping is usually fine,
+    // let's just make it a multiple of 5 if we want to be nice:
+    state.interval = Math.round(state.interval / 5) * 5;
     intervalInput.value = state.interval;
-    buildSegmentPool(); // インターバルが変わったのでセグメントを再分割
+    buildSegmentPool();
     if (state.isPlaying) {
       state.elapsed = 0;
     }
   });
 
   intervalDown.addEventListener('click', () => {
-    state.interval = Math.max(1, state.interval - 1);
+    state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
     buildSegmentPool();
     if (state.isPlaying) state.elapsed = 0;
   });
 
   intervalUp.addEventListener('click', () => {
-    state.interval = Math.min(300, state.interval + 1);
+    state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
     buildSegmentPool();
     if (state.isPlaying) state.elapsed = 0;

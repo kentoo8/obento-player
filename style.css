@@ -492,6 +492,37 @@ body.cinema-mode .exit-cinema-btn {
   background: rgba(0,0,0,0.7);
 }
 
+/* Cell skip toggle */
+.cell-skip-btn {
+  position: absolute;
+  top: 8px;
+  right: 42px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: all;
+  z-index: 11;
+}
+
+.video-cell:hover .cell-skip-btn {
+  opacity: 1;
+}
+
+.cell-skip-btn:hover {
+  background: rgba(0,0,0,0.7);
+  color: var(--danger);
+}
+
 /* Cell pin toggle */
 .cell-pin-btn {
   position: absolute;

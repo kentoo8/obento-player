@@ -18,6 +18,7 @@
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,
+    blacklistedVideos: new Set(),
   };
 
   // ===== DOM Refs =====
@@ -135,6 +136,8 @@
     const pool = [];
 
     state.videoFiles.forEach((vf, vi) => {
+      if (state.blacklistedVideos.has(vi)) return;
+      
       const dur = state.videoDurations[vi];
       if (dur && dur > 0) {
         // インターバル秒ごとにセグメントを作る
@@ -299,6 +302,30 @@
     });
     cell.appendChild(pinBtn);
 
+    // Skip toggle
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'cell-skip-btn';
+    skipBtn.innerHTML = skipIconSVG();
+    skipBtn.title = 'この動画をスキップ (以降再生しない)';
+    skipBtn.addEventListener('click', () => {
+      const activeLayer = cell.querySelector('.video-layer.active');
+      if (activeLayer && activeLayer._segKey) {
+        const vi = parseInt(activeLayer._segKey.split(':')[0], 10);
+        state.blacklistedVideos.add(vi);
+        buildSegmentPool();
+        
+        // スキップされた動画を表示しているすべてのセルを新しいシーンへ切り替える
+        const cells = videoGrid.querySelectorAll('.video-cell');
+        cells.forEach(c => {
+          const layer = c.querySelector('.video-layer.active');
+          if (layer && layer._segKey && parseInt(layer._segKey.split(':')[0], 10) === vi) {
+            assignRandomSceneToCell(c);
+          }
+        });
+      }
+    });
+    cell.appendChild(skipBtn);
+
     return cell;
   }
 
@@ -321,6 +348,13 @@
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       <path d="M15.54 8.46a5 5 0 010 7.07"/>
+    </svg>`;
+  }
+
+  function skipIconSVG() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="5 4 15 12 5 20 5 4"></polygon>
+      <line x1="19" y1="5" x2="19" y2="19"></line>
     </svg>`;
   }
 

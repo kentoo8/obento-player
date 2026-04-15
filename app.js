@@ -361,9 +361,10 @@
   function startTimer() {
     stopTimer();
     state.elapsed = 0;
-    const totalMs = state.interval * 1000;
 
     state.tickInterval = setInterval(() => {
+      // 毎回のtickで最新のインターバルを計算して反映
+      const totalMs = state.interval * 1000;
       state.elapsed += 50;
       const pct = Math.min((state.elapsed / totalMs) * 100, 100);
       progressFill.style.width = pct + '%';

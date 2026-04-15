@@ -30,7 +30,6 @@
   --transition-normal: 250ms ease;
   --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
   --header-height: 64px;
-  --progress-height: 3px;
 }
 
 html, body {
@@ -304,7 +303,7 @@ select:hover, select:focus {
 
 /* ===== Video Grid ===== */
 .video-grid {
-  height: calc(100vh - var(--header-height) - var(--progress-height));
+  height: calc(100vh - var(--header-height));
   display: grid;
   gap: 2px;
   background: var(--bg-primary);
@@ -313,8 +312,7 @@ select:hover, select:focus {
 }
 
 /* ===== Cinema Mode ===== */
-body.cinema-mode header,
-body.cinema-mode .progress-bar {
+body.cinema-mode header {
   display: none;
 }
 
@@ -499,28 +497,7 @@ body.cinema-mode .empty-state {
   margin-bottom: 24px;
 }
 
-/* ===== Progress Bar ===== */
-.progress-bar {
-  height: var(--progress-height);
-  background: var(--bg-secondary);
-  position: relative;
-  overflow: hidden;
-}
 
-.progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent-primary), #a78bfa, var(--accent-primary));
-  background-size: 200% 100%;
-  transition: width 100ms linear;
-  border-radius: 0 2px 2px 0;
-  animation: progressShine 3s linear infinite;
-}
-
-@keyframes progressShine {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
 
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 6px; }
@@ -556,6 +533,6 @@ body.cinema-mode .empty-state {
   }
 
   .video-grid {
-    height: calc(100vh - 110px - var(--progress-height));
+    height: calc(100vh - 110px);
   }
 }

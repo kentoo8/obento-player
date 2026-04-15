@@ -16,9 +16,6 @@
     isPlaying: false,
     volume: 0.3,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
-    timerId: null,
-    elapsed: 0,           // ms elapsed since last switch
-    tickInterval: null,
   };
 
   // ===== DOM Refs =====
@@ -28,7 +25,6 @@
   const dropOverlay = $('#dropOverlay');
   const videoGrid = $('#videoGrid');
   const emptyState = $('#emptyState');
-  const progressFill = $('#progressFill');
   const intervalInput = $('#intervalInput');
   const gridSelect = $('#gridSelect');
   const volumeSlider = $('#volumeSlider');
@@ -302,7 +298,23 @@
       const seg = popSegment(usedInBatch);
       usedInBatch.add(seg.key);
       applySegmentToCell(cell, seg);
+      scheduleCellSwitch(cell, true);
     });
+  }
+
+  function scheduleCellSwitch(cell, stagger = false) {
+    if (cell._switchTimer) clearTimeout(cell._switchTimer);
+    if (!state.isPlaying) return;
+
+    let delaySec = state.interval;
+    if (stagger) {
+      // 最初の切り替えタイミングを 0.2倍〜1.2倍 の間でランダムにずらす
+      delaySec = state.interval * (0.2 + Math.random());
+    }
+
+    cell._switchTimer = setTimeout(() => {
+      assignRandomSceneToCell(cell);
+    }, delaySec * 1000);
   }
 
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
@@ -323,6 +335,7 @@
 
     const seg = popSegment(activeKeys);
     applySegmentToCell(cell, seg);
+    scheduleCellSwitch(cell, false);
   }
 
   function applySegmentToCell(cell, seg) {
@@ -371,48 +384,25 @@
 
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-layer.active').forEach(v => v.play().catch(() => {}));
-      startTimer();
+      
+      videoGrid.querySelectorAll('.video-cell').forEach(cell => {
+        scheduleCellSwitch(cell, true); // タイマー再開（ずらす）
+      });
+      
       playIcon.style.display = 'none';
       pauseIcon.style.display = 'block';
       playBtnText.textContent = '停止';
     } else {
       videoGrid.querySelectorAll('.video-layer').forEach(v => v.pause());
-      stopTimer();
+      
+      videoGrid.querySelectorAll('.video-cell').forEach(cell => {
+        if (cell._switchTimer) clearTimeout(cell._switchTimer);
+      });
+      
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
       playBtnText.textContent = '再生';
     }
-  }
-
-  function startTimer() {
-    stopTimer();
-    state.elapsed = 0;
-
-    state.tickInterval = setInterval(() => {
-      // 毎回のtickで最新のインターバルを計算して反映
-      const totalMs = state.interval * 1000;
-      state.elapsed += 50;
-      const pct = Math.min((state.elapsed / totalMs) * 100, 100);
-      progressFill.style.width = pct + '%';
-
-      if (state.elapsed >= totalMs) {
-        shuffleScenes();
-        state.elapsed = 0;
-      }
-    }, 50);
-  }
-
-  function stopTimer() {
-    if (state.tickInterval) {
-      clearInterval(state.tickInterval);
-      state.tickInterval = null;
-    }
-    progressFill.style.width = '0%';
-  }
-
-  function shuffleScenes() {
-    assignRandomScenes();
-    state.elapsed = 0;
   }
 
   // ===== Cinema Mode =====
@@ -505,7 +495,7 @@
   // Shuffle
   shuffleBtn.addEventListener('click', () => {
     if (state.videoFiles.length === 0) return;
-    shuffleScenes();
+    assignRandomScenes();
   });
 
   // Grid select
@@ -520,13 +510,11 @@
 
   intervalInput.addEventListener('change', () => {
     state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));
-    // round to nearest 5 if you want to be strict, but just clamping is usually fine,
-    // let's just make it a multiple of 5 if we want to be nice:
     state.interval = Math.round(state.interval / 5) * 5;
     intervalInput.value = state.interval;
     buildSegmentPool();
     if (state.isPlaying) {
-      state.elapsed = 0;
+      videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
   });
 
@@ -534,14 +522,18 @@
     state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
     buildSegmentPool();
-    if (state.isPlaying) state.elapsed = 0;
+    if (state.isPlaying) {
+      videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
+    }
   });
 
   intervalUp.addEventListener('click', () => {
     state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
     buildSegmentPool();
-    if (state.isPlaying) state.elapsed = 0;
+    if (state.isPlaying) {
+      videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
+    }
   });
 
   // Audio toggle
@@ -572,7 +564,7 @@
         if (state.videoFiles.length > 0) togglePlay();
         break;
       case 'KeyS':
-        if (state.videoFiles.length > 0) shuffleScenes();
+        if (state.videoFiles.length > 0) assignRandomScenes();
         break;
       case 'KeyF':
         toggleCinemaMode();

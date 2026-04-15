@@ -309,6 +309,45 @@ select:hover, select:focus {
   gap: 2px;
   background: var(--bg-primary);
   padding: 2px;
+  transition: height var(--transition-normal);
+}
+
+/* ===== Cinema Mode ===== */
+body.cinema-mode header,
+body.cinema-mode .progress-bar {
+  display: none;
+}
+
+body.cinema-mode .video-grid {
+  height: 100vh;
+}
+
+body.cinema-mode .empty-state {
+  top: 0;
+}
+
+/* Toast hint */
+.cinema-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(12px);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.82rem;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.cinema-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }

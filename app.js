@@ -45,6 +45,9 @@
   const audioToggleBtn = $('#audioToggleBtn');
   const audioOffIcon = $('#audioOffIcon');
   const audioOnIcon = $('#audioOnIcon');
+  const fullscreenBtn = $('#fullscreenBtn');
+  const fullscreenEnterIcon = $('#fullscreenEnterIcon');
+  const fullscreenExitIcon = $('#fullscreenExitIcon');
 
   // ===== Video File Management =====
 
@@ -385,6 +388,34 @@
     state.elapsed = 0;
   }
 
+  // ===== Cinema Mode =====
+
+  let cinemaToastTimer = null;
+
+  function showCinemaToast(msg) {
+    let toast = document.querySelector('.cinema-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'cinema-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(cinemaToastTimer);
+    cinemaToastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function toggleCinemaMode() {
+    const isOn = document.body.classList.toggle('cinema-mode');
+    fullscreenEnterIcon.style.display = isOn ? 'none' : 'block';
+    fullscreenExitIcon.style.display = isOn ? 'block' : 'none';
+    const labelEl = fullscreenBtn.querySelector('.fs-label');
+    if (labelEl) labelEl.textContent = isOn ? '通常' : '動画のみ';
+    showCinemaToast(isOn ? '動画のみ表示中 — F キーで戻る' : 'コントロール表示に戻りました');
+  }
+
+  fullscreenBtn.addEventListener('click', toggleCinemaMode);
+
   // ===== Utility =====
 
   function formatTime(s) {
@@ -513,6 +544,14 @@
         break;
       case 'KeyS':
         if (state.videoFiles.length > 0) shuffleScenes();
+        break;
+      case 'KeyF':
+        toggleCinemaMode();
+        break;
+      case 'Escape':
+        if (document.body.classList.contains('cinema-mode')) {
+          toggleCinemaMode();
+        }
         break;
       case 'ArrowUp':
         e.preventDefault();

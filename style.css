@@ -336,32 +336,47 @@ body.cinema-mode .empty-state {
   top: 0;
 }
 
-.exit-cinema-btn {
+/* ===== Floating Cinema Buttons ===== */
+.floating-cinema-btn {
   position: fixed;
-  top: 16px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.floating-cinema-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.05);
+}
+
+/* Visibility Control */
+.floating-cinema-btn.enter-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+body.cinema-mode .floating-cinema-btn.enter-btn {
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition-normal), background var(--transition-fast);
 }
 
-.exit-cinema-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
+.floating-cinema-btn.exit-btn {
+  opacity: 0;
+  pointer-events: none;
 }
-
-body.cinema-mode .exit-cinema-btn {
+body.cinema-mode .floating-cinema-btn.exit-btn {
   opacity: 1;
   pointer-events: auto;
 }

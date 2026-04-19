@@ -94,16 +94,6 @@
           <line x1="15" y1="15" x2="21" y2="21"/>
           <line x1="4" y1="4" x2="9" y2="9"/>
         </svg>
-        シャッフル
-      </button>
-      <button id="fullscreenBtn" class="btn btn-secondary icon-only" title="全画面 (F)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 3 21 3 21 9"/>
-          <polyline points="9 21 3 21 3 15"/>
-          <line x1="21" y1="3" x2="14" y2="10"/>
-          <line x1="3" y1="21" x2="10" y2="14"/>
-        </svg>
-      </button>
     </div>
     <input type="file" id="fileInput" multiple accept="video/*" style="display:none">
   </header>
@@ -138,8 +128,17 @@
     </div>
   </div>
 
-  <!-- Floating Exit Cinema Button -->
-  <button id="exitCinemaBtn" class="exit-cinema-btn" title="通常表示に戻る (Esc, F)">
+  <!-- Floating Cinema Buttons -->
+  <button id="fullscreenBtn" class="floating-cinema-btn enter-btn" title="全画面表示 (F)">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="15 3 21 3 21 9"/>
+      <polyline points="9 21 3 21 3 15"/>
+      <line x1="21" y1="3" x2="14" y2="10"/>
+      <line x1="3" y1="21" x2="10" y2="14"/>
+    </svg>
+  </button>
+
+  <button id="exitCinemaBtn" class="floating-cinema-btn exit-btn" title="通常表示に戻る (Esc, F)">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <polyline points="4 14 10 14 10 20"/>
       <polyline points="20 10 14 10 14 4"/>

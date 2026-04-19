@@ -204,21 +204,63 @@ header {
   margin-right: 2px;
 }
 
-select {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.85rem;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  outline: none;
-  transition: border-color var(--transition-fast);
+/* Grid Dropdown */
+.grid-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-select:hover, select:focus {
-  border-color: var(--accent-primary);
+.grid-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  min-width: 70px;
+  justify-content: center;
+}
+
+.grid-dropdown-content {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  min-width: 140px;
+  display: none;
+  flex-direction: column;
+  padding: 6px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.grid-dropdown.open .grid-dropdown-content {
+  display: flex;
+}
+
+.grid-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.grid-dropdown-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.grid-dropdown-option active {
+  background: rgba(var(--accent-primary-rgb), 0.15);
+  color: var(--accent-primary);
+}
+
+.grid-dropdown-option svg {
+  flex-shrink: 0;
 }
 
 /* Volume button wrapper + vertical popup */

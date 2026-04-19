@@ -29,7 +29,12 @@
   const videoGrid = $('#videoGrid');
   const emptyState = $('#emptyState');
   const intervalInput = $('#intervalInput');
-  const gridSelect = $('#gridSelect');
+  const gridDropdown = $('#gridDropdown');
+  const gridDropdownBtn = $('#gridDropdownBtn');
+  const gridDropdownContent = $('#gridDropdownContent');
+  const gridDropdownOptions = $$('.grid-dropdown-option');
+  const gridIconContainer = $('#gridIconContainer');
+  const gridCountLabel = $('#gridCountLabel');
   const volumeSlider = $('#volumeSlider');
   const playAllBtn = $('#playAllBtn');
   const playIcon = $('#playIcon');
@@ -432,6 +437,20 @@
     </svg>`;
   }
 
+  const gridLayouts = [1, 2, 4, 6, 9];
+  const gridIcons = {
+    1: `<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor"/></svg>`,
+    2: `<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="18" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="18" rx="1" fill="currentColor"/></svg>`,
+    4: `<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/></svg>`,
+    6: `<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/></svg>`,
+    9: `<svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="0.5" fill="currentColor"/></svg>`
+  };
+
+  function updateGridUI() {
+    gridIconContainer.innerHTML = gridIcons[state.gridCount];
+    gridCountLabel.textContent = state.gridCount;
+  }
+
   function updateMuteButtons() {
     const cells = videoGrid.querySelectorAll('.video-cell');
     cells.forEach(cell => {
@@ -457,15 +476,11 @@
       audioOnIcon.style.display = 'block';
       audioToggleBtn.classList.remove('audio-off');
       audioToggleBtn.classList.add('audio-on');
-      const lbl = audioToggleBtn.querySelector('.audio-label');
-      if (lbl) lbl.textContent = '音声ON';
     } else {
       audioOffIcon.style.display = 'block';
       audioOnIcon.style.display = 'none';
       audioToggleBtn.classList.add('audio-off');
       audioToggleBtn.classList.remove('audio-on');
-      const lbl = audioToggleBtn.querySelector('.audio-label');
-      if (lbl) lbl.textContent = 'ミュート';
     }
     updateMuteButtons();
   }
@@ -776,15 +791,40 @@
     assignRandomScenes();
   });
 
-  // Grid select
-  gridSelect.addEventListener('change', () => {
-    state.gridCount = parseInt(gridSelect.value, 10);
-    renderGrid();
-    if (state.isPlaying) {
-      const videos = videoGrid.querySelectorAll('video');
-      videos.forEach(v => v.play().catch(() => {}));
-    }
+  // Grid Dropdown Toggle
+  gridDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    gridDropdown.classList.toggle('open');
   });
+
+  // Select Option
+  gridDropdownOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const val = parseInt(opt.dataset.value, 10);
+      state.gridCount = val;
+      
+      gridDropdownOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      
+      updateGridUI();
+      renderGrid();
+      
+      gridDropdown.classList.remove('open');
+      
+      if (state.isPlaying) {
+        const videos = videoGrid.querySelectorAll('video');
+        videos.forEach(v => v.play().catch(() => {}));
+      }
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    gridDropdown.classList.remove('open');
+  });
+
+  // Initial UI Setup
+  updateGridUI();
 
   intervalInput.addEventListener('change', () => {
     state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));

@@ -4,12 +4,7 @@
 
 ## 起動方法
 
-```bash
-cd ~/src/sandbox/multi-player
-python3 -m http.server 8765
-```
-
-ブラウザで `http://localhost:8765` を開く。
+`index.html` をダブルクリックするだけ。サーバー不要。
 
 ## 使い方
 

@@ -221,6 +221,13 @@ select:hover, select:focus {
   border-color: var(--accent-primary);
 }
 
+/* Volume button wrapper + vertical popup */
+.volume-btn-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Volume slider */
 #volumeSlider {
   -webkit-appearance: none;

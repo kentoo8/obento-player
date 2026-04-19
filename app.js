@@ -14,7 +14,7 @@
     gridCount: 4,
     interval: 10,         // seconds
     isPlaying: false,
-    volume: 0.3,
+    volume: 0.8,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,

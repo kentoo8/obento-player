@@ -163,19 +163,46 @@
     console.log(`[Pool] ${pool.length} セグメントをビルド (動画${state.videoFiles.length}本)`);
   }
 
-  // プールからセグメントを1つ取り出す。excludeKeys に含まれるものはスキップ
-  function popSegment(excludeKeys) {
-    // プールが空になったら再ビルド（全セグメント使い切り）
+  // プールからセグメントを1つ取り出す。
+  function popSegment(excludeKeys, activeSegments = new Map()) {
     if (state.segmentPool.length === 0) {
       buildSegmentPool();
     }
-    // excludeKeys に入っていない最初のエントリを探す
+    
+    // 第1候補: 「現在他のセルで再生されていないシーン」かつ「現在他のセルで再生されていない動画(別ファイル)」
     for (let i = 0; i < state.segmentPool.length; i++) {
-      if (!excludeKeys.has(state.segmentPool[i].key)) {
+      const seg = state.segmentPool[i];
+      if (!excludeKeys.has(seg.key) && !activeSegments.has(seg.videoIndex)) {
         return state.segmentPool.splice(i, 1)[0];
       }
     }
-    // 全て除外対象（動画が少なすぎるケース）→ 先頭を返す
+    
+    // 第2候補: 同じ動画の別シーンで妥協する場合、現在再生中のシーンとの「時間的な距離」が最も遠いものを選ぶ
+    let bestDist = -1;
+    let bestIndex = -1;
+
+    for (let i = 0; i < state.segmentPool.length; i++) {
+      const seg = state.segmentPool[i];
+      if (!excludeKeys.has(seg.key)) {
+        const activeTimes = activeSegments.get(seg.videoIndex) || [];
+        let minDist = Infinity;
+        for (const t of activeTimes) {
+          const dist = Math.abs(seg.startTime - t);
+          if (dist < minDist) minDist = dist;
+        }
+
+        if (minDist > bestDist) {
+          bestDist = minDist;
+          bestIndex = i;
+        }
+      }
+    }
+
+    if (bestIndex !== -1) {
+      return state.segmentPool.splice(bestIndex, 1)[0];
+    }
+    
+    // 全て除外対象（セグメントが少なすぎるケース）→ 先頭を返す
     return state.segmentPool.length > 0
       ? state.segmentPool.shift()
       : { videoIndex: 0, startTime: 0, key: '0:0' };
@@ -206,6 +233,9 @@
     cell.dataset.index = index;
     cell.dataset.muted = "true";
     cell.dataset.pinned = "false";
+    
+    cell._history = [];
+    cell._historyIndex = -1;
 
     function setupLayer(isActive) {
       const video = document.createElement('video');
@@ -248,38 +278,76 @@
     overlay.innerHTML = `
       <div class="video-cell-info">
         <span class="video-cell-name"></span>
+        <div class="inline-seek-controls">
+          <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
+          <button class="small-seek-btn cell-mute-btn" title="個別にミュート/解除">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
+          <button class="small-seek-btn prev-vid-btn" title="前の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg></button>
+          <button class="small-seek-btn rew-btn" title="10秒戻る"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg></button>
+          <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
+          <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
+          <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
+        </div>
         <span class="video-cell-time"></span>
       </div>
     `;
     cell.appendChild(overlay);
 
-    // Mute toggle
-    const muteBtn = document.createElement('button');
-    muteBtn.className = 'cell-mute-btn';
-    muteBtn.innerHTML = muteIconSVG();
-    muteBtn.addEventListener('click', () => {
-      const isMuted = cell.dataset.muted === "true";
-      
-      // Toggle only this specific cell
-      cell.dataset.muted = isMuted ? "false" : "true";
-      
-      const layers = cell.querySelectorAll('.video-layer');
-      const m = cell.dataset.muted === "true";
-      layers.forEach(v => {
-        v.muted = m;
-        if (!m) v.volume = state.volume;
-      });
-      
-      updateMuteButtons();
+    // ------------------------------------
+    // Attach Event Listeners to Inline Controls
+    // ------------------------------------
+    
+    // Previous Video
+    const prevVidBtn = overlay.querySelector('.prev-vid-btn');
+    prevVidBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (cell._historyIndex > 0) {
+        cell._historyIndex--;
+        const prevSeg = cell._history[cell._historyIndex];
+        applySegmentToCell(cell, prevSeg, false);
+        if (state.isPlaying) scheduleCellSwitch(cell, false);
+      }
     });
-    cell.appendChild(muteBtn);
+
+    // Next Video
+    const nextVidBtn = overlay.querySelector('.next-vid-btn');
+    nextVidBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (cell._historyIndex < cell._history.length - 1) {
+        cell._historyIndex++;
+        const nextSeg = cell._history[cell._historyIndex];
+        applySegmentToCell(cell, nextSeg, false);
+        if (state.isPlaying) scheduleCellSwitch(cell, false);
+      } else {
+        assignRandomSceneToCell(cell);
+      }
+    });
+
+    // Rewind
+    const rewBtn = overlay.querySelector('.rew-btn');
+    rewBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const activeLayer = cell.querySelector('.video-layer.active');
+      if (activeLayer) {
+        activeLayer.currentTime = Math.max(0, activeLayer.currentTime - 10);
+        if (state.isPlaying) scheduleCellSwitch(cell, false);
+      }
+    });
+
+    // Forward
+    const fwdBtn = overlay.querySelector('.fwd-btn');
+    fwdBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const activeLayer = cell.querySelector('.video-layer.active');
+      if (activeLayer) {
+        activeLayer.currentTime = Math.min(activeLayer.duration || 0, activeLayer.currentTime + 10);
+        if (state.isPlaying) scheduleCellSwitch(cell, false);
+      }
+    });
 
     // Pin toggle
-    const pinBtn = document.createElement('button');
-    pinBtn.className = 'cell-pin-btn';
-    pinBtn.innerHTML = pinIconSVG();
-    pinBtn.title = 'ピン留め (自動切替を停止)';
-    pinBtn.addEventListener('click', () => {
+    const pinBtn = overlay.querySelector('.cell-pin-btn');
+    pinBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isPinned = cell.dataset.pinned === "true";
       if (!isPinned) {
         cell.dataset.pinned = "true";
@@ -293,19 +361,29 @@
         cell.dataset.pinned = "false";
         cell.classList.remove('is-pinned');
         pinBtn.classList.remove('pinned');
-        if (state.isPlaying) {
-          scheduleCellSwitch(cell, true);
-        }
+        if (state.isPlaying) scheduleCellSwitch(cell, true);
       }
     });
-    cell.appendChild(pinBtn);
 
-    // Skip toggle
-    const skipBtn = document.createElement('button');
-    skipBtn.className = 'cell-skip-btn';
-    skipBtn.innerHTML = skipIconSVG();
-    skipBtn.title = 'この動画をスキップ (以降再生しない)';
-    skipBtn.addEventListener('click', () => {
+    // Mute toggle
+    const muteBtn = overlay.querySelector('.cell-mute-btn');
+    muteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isMuted = cell.dataset.muted === "true";
+      cell.dataset.muted = isMuted ? "false" : "true";
+      const layers = cell.querySelectorAll('.video-layer');
+      const m = cell.dataset.muted === "true";
+      layers.forEach(v => {
+        v.muted = m;
+        if (!m) v.volume = state.volume;
+      });
+      updateMuteButtons();
+    });
+
+    // Skip (Discard) toggle
+    const skipBtn = overlay.querySelector('.cell-skip-btn');
+    skipBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const activeLayer = cell.querySelector('.video-layer.active');
       if (activeLayer && activeLayer._segKey) {
         const vi = parseInt(activeLayer._segKey.split(':')[0], 10);
@@ -322,8 +400,6 @@
         });
       }
     });
-    cell.appendChild(skipBtn);
-
     return cell;
   }
 
@@ -351,8 +427,8 @@
 
   function skipIconSVG() {
     return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="5 4 15 12 5 20 5 4"></polygon>
-      <line x1="19" y1="5" x2="19" y2="19"></line>
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
     </svg>`;
   }
 
@@ -402,19 +478,28 @@
     if (state.segmentPool.length === 0) buildSegmentPool();
 
     const cells = videoGrid.querySelectorAll('.video-cell');
-    const usedInBatch = new Set(); // このバッチで既に使ったキー
+    const usedInBatch = new Set();
+    const activeSegments = new Map(); // videoIndex -> [startTimes]
 
     cells.forEach(cell => {
       if (cell.dataset.pinned === "true") {
         const activeLayer = cell.querySelector('.video-layer.active');
         if (activeLayer && activeLayer._segKey) {
+          const parts = activeLayer._segKey.split(':');
+          const vi = parseInt(parts[0], 10);
+          const t = parseInt(parts[1], 10);
           usedInBatch.add(activeLayer._segKey);
+          if (!activeSegments.has(vi)) activeSegments.set(vi, []);
+          activeSegments.get(vi).push(t);
         }
         return;
       }
 
-      const seg = popSegment(usedInBatch);
+      const seg = popSegment(usedInBatch, activeSegments);
       usedInBatch.add(seg.key);
+      if (!activeSegments.has(seg.videoIndex)) activeSegments.set(seg.videoIndex, []);
+      activeSegments.get(seg.videoIndex).push(seg.startTime);
+      
       applySegmentToCell(cell, seg);
       scheduleCellSwitch(cell, true);
     });
@@ -441,23 +526,41 @@
     if (state.videoFiles.length === 0) return;
     if (state.segmentPool.length === 0) buildSegmentPool();
 
-    // 現在他のセルで再生中のキーを収集
+    // 現在他のセルで再生中のキーと時間を収集
     const activeCells = videoGrid.querySelectorAll('.video-cell');
     const activeKeys = new Set();
+    const activeSegments = new Map();
+
     activeCells.forEach(c => {
       if (c !== cell) {
         c.querySelectorAll('.video-layer.active').forEach(v => {
-          if (v._segKey) activeKeys.add(v._segKey);
+          if (v._segKey) {
+            const parts = v._segKey.split(':');
+            const vi = parseInt(parts[0], 10);
+            const t = parseInt(parts[1], 10);
+            activeKeys.add(v._segKey);
+            if (!activeSegments.has(vi)) activeSegments.set(vi, []);
+            activeSegments.get(vi).push(t);
+          }
         });
       }
     });
 
-    const seg = popSegment(activeKeys);
+    const seg = popSegment(activeKeys, activeSegments);
     applySegmentToCell(cell, seg);
     scheduleCellSwitch(cell, false);
   }
 
-  function applySegmentToCell(cell, seg) {
+  function applySegmentToCell(cell, seg, storeInHistory = true) {
+    if (storeInHistory) {
+      if (cell._historyIndex < cell._history.length - 1) {
+        cell._history = cell._history.slice(0, cell._historyIndex + 1);
+      }
+      cell._history.push(seg);
+      if (cell._history.length > 50) cell._history.shift(); // Max 50 history length
+      cell._historyIndex = cell._history.length - 1;
+    }
+
     const layers = cell.querySelectorAll('.video-layer');
     const activeLayer = cell.querySelector('.video-layer.active');
     const nextLayer = Array.from(layers).find(v => v !== activeLayer) || layers[0];
@@ -764,6 +867,32 @@
         videoGrid.querySelectorAll('.video-layer').forEach(v => {
           if (!v.muted) v.volume = state.volume;
         });
+        break;
+      case 'ArrowLeft':
+        {
+          const hoveredCellLeft = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
+          if (hoveredCellLeft) {
+            e.preventDefault();
+            const activeLayer = hoveredCellLeft.querySelector('.video-layer.active');
+            if (activeLayer) {
+              activeLayer.currentTime = Math.max(0, activeLayer.currentTime - 10);
+              if (state.isPlaying) scheduleCellSwitch(hoveredCellLeft, false);
+            }
+          }
+        }
+        break;
+      case 'ArrowRight':
+        {
+          const hoveredCellRight = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
+          if (hoveredCellRight) {
+            e.preventDefault();
+            const activeLayer = hoveredCellRight.querySelector('.video-layer.active');
+            if (activeLayer) {
+              activeLayer.currentTime = Math.min(activeLayer.duration || 0, activeLayer.currentTime + 10);
+              if (state.isPlaying) scheduleCellSwitch(hoveredCellRight, false);
+            }
+          }
+        }
         break;
     }
   });

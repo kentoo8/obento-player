@@ -83,6 +83,7 @@
       emptyState.classList.add('hidden');
       renderGrid();
       if (!state.isPlaying) {
+        setAudioState(true); // 自動で音声ONにする
         togglePlay();
       }
     }

@@ -42,6 +42,7 @@
   const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
   const speedLabel = $('#speedLabel');
   const volumeSlider = $('#volumeSlider');
+  const appLogo = $('#appLogo');
   const playAllBtn = $('#playAllBtn');
   const playIcon = $('#playIcon');
   const pauseIcon = $('#pauseIcon');
@@ -907,6 +908,34 @@
     buildSegmentPool();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
+    }
+  });
+
+  // Reset All Logic
+  appLogo.addEventListener('click', () => {
+    if (state.videoFiles.length === 0) return;
+    
+    if (confirm('すべての動画をクリアして初期状態に戻しますか？')) {
+      // Stop and clean up
+      if (state.isPlaying) togglePlay();
+      
+      state.videoFiles.forEach(v => {
+        if (v.url.startsWith('blob:')) URL.revokeObjectURL(v.url);
+      });
+      
+      state.videoFiles = [];
+      state.videoDurations = [];
+      state.segmentPool = [];
+      state.preloadQueue = []; // Clear queue
+      state.activePreloads = 0; // Reset counter
+      state.blacklistedVideos.clear();
+      
+      // Reset UI
+      videoGrid.innerHTML = '';
+      emptyState.classList.remove('hidden'); // Use class instead of inline style
+      videoGrid.style.display = ''; // Reset inline style
+      
+      updateAllPreloadProgress();
     }
   });
 

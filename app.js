@@ -258,20 +258,17 @@
     muteBtn.innerHTML = muteIconSVG();
     muteBtn.addEventListener('click', () => {
       const isMuted = cell.dataset.muted === "true";
-      // mute all others
-      videoGrid.querySelectorAll('.video-cell').forEach(c => c.dataset.muted = "true");
       
-      // toggle this one
+      // Toggle only this specific cell
       cell.dataset.muted = isMuted ? "false" : "true";
       
-      videoGrid.querySelectorAll('.video-cell').forEach(c => {
-        const layers = c.querySelectorAll('.video-layer');
-        const m = c.dataset.muted === "true";
-        layers.forEach(v => {
-          v.muted = m;
-          if (!m) v.volume = state.volume;
-        });
+      const layers = cell.querySelectorAll('.video-layer');
+      const m = cell.dataset.muted === "true";
+      layers.forEach(v => {
+        v.muted = m;
+        if (!m) v.volume = state.volume;
       });
+      
       updateMuteButtons();
     });
     cell.appendChild(muteBtn);

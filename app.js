@@ -18,6 +18,7 @@
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,
+    playbackSpeed: 1.0,
     blacklistedVideos: new Set(),
   };
 
@@ -32,9 +33,14 @@
   const gridDropdown = $('#gridDropdown');
   const gridDropdownBtn = $('#gridDropdownBtn');
   const gridDropdownContent = $('#gridDropdownContent');
-  const gridDropdownOptions = $$('.grid-dropdown-option');
+  const gridDropdownOptions = Array.from($$('#gridDropdown .grid-dropdown-option'));
   const gridIconContainer = $('#gridIconContainer');
   const gridCountLabel = $('#gridCountLabel');
+
+  const speedDropdown = $('#speedDropdown');
+  const speedDropdownBtn = $('#speedDropdownBtn');
+  const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
+  const speedLabel = $('#speedLabel');
   const volumeSlider = $('#volumeSlider');
   const playAllBtn = $('#playAllBtn');
   const playIcon = $('#playIcon');
@@ -603,6 +609,7 @@
       if (isFinite(targetTime) && targetTime > 0) {
         nextLayer.currentTime = targetTime;
       }
+      nextLayer.playbackRate = state.playbackSpeed;
       if (state.isPlaying) {
         nextLayer.play().catch(() => {});
       }
@@ -794,15 +801,15 @@
   // Grid Dropdown Toggle
   gridDropdownBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    speedDropdown.classList.remove('open'); // Close other
     gridDropdown.classList.toggle('open');
   });
 
-  // Select Option
+  // Select Grid Option
   gridDropdownOptions.forEach(opt => {
     opt.addEventListener('click', () => {
       const val = parseInt(opt.dataset.value, 10);
       state.gridCount = val;
-      
       gridDropdownOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       
@@ -810,17 +817,40 @@
       renderGrid();
       
       gridDropdown.classList.remove('open');
-      
       if (state.isPlaying) {
-        const videos = videoGrid.querySelectorAll('video');
-        videos.forEach(v => v.play().catch(() => {}));
+        videoGrid.querySelectorAll('video').forEach(v => v.play().catch(() => {}));
       }
     });
   });
 
-  // Close dropdown when clicking outside
+  // Speed Dropdown Toggle
+  speedDropdownBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    gridDropdown.classList.remove('open'); // Close other
+    speedDropdown.classList.toggle('open');
+  });
+
+  // Select Speed Option
+  speedDropdownOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const val = parseFloat(opt.dataset.value);
+      state.playbackSpeed = val;
+      speedDropdownOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      speedLabel.textContent = val + 'x';
+      
+      // Apply to all active videos
+      videoGrid.querySelectorAll('video').forEach(v => {
+        v.playbackRate = val;
+      });
+      speedDropdown.classList.remove('open');
+    });
+  });
+
+  // Close dropdowns when clicking outside
   document.addEventListener('click', () => {
     gridDropdown.classList.remove('open');
+    speedDropdown.classList.remove('open');
   });
 
   // Initial UI Setup
@@ -931,6 +961,29 @@
               activeLayer.currentTime = Math.min(activeLayer.duration || 0, activeLayer.currentTime + 10);
               if (state.isPlaying) scheduleCellSwitch(hoveredCellRight, false);
             }
+          }
+        }
+        break;
+      case 'BracketLeft': // Fallthrough to support physical location on US keyboards
+      case 'BracketRight': // Fallthrough
+      default:
+        if (e.key === '[' || e.key === '［') {
+          e.preventDefault();
+          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
+          const curIdx = speeds.indexOf(state.playbackSpeed);
+          if (curIdx > 0) {
+            const nextSpeed = speeds[curIdx - 1];
+            const opt = speedDropdownOptions.find(o => parseFloat(o.dataset.value) === nextSpeed);
+            if (opt) opt.click();
+          }
+        } else if (e.key === ']' || e.key === '］') {
+          e.preventDefault();
+          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
+          const curIdx = speeds.indexOf(state.playbackSpeed);
+          if (curIdx < speeds.length - 1) {
+            const nextSpeed = speeds[curIdx + 1];
+            const opt = speedDropdownOptions.find(o => parseFloat(o.dataset.value) === nextSpeed);
+            if (opt) opt.click();
           }
         }
         break;

@@ -19,6 +19,7 @@
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,
     playbackSpeed: 1.0,
+    isAutoRotateOn: false,
     blacklistedVideos: new Set(),
   };
 
@@ -43,6 +44,7 @@
   const speedLabel = $('#speedLabel');
   const volumeSlider = $('#volumeSlider');
   const appLogo = $('#appLogo');
+  const autoRotateBtn = $('#autoRotateBtn');
   const playAllBtn = $('#playAllBtn');
   const playIcon = $('#playIcon');
   const pauseIcon = $('#pauseIcon');
@@ -129,6 +131,8 @@
       
       tmp.onloadedmetadata = () => {
         state.videoDurations[index] = tmp.duration;
+        // 縦長判定 (高さ > 幅)
+        state.videoFiles[index].isPortrait = tmp.videoHeight > tmp.videoWidth;
         tmp.src = '';
         resolve();
       };
@@ -616,6 +620,7 @@
     const chosen = state.videoFiles[seg.videoIndex];
     if (!chosen) return;
 
+    nextLayer._vi = seg.videoIndex; // Store index for later reference (e.g. rotate toggle)
     nextLayer._fileName = chosen.file.name;
     nextLayer._segKey = seg.key; // 重複チェック用
 
@@ -637,6 +642,14 @@
         nextLayer.currentTime = targetTime;
       }
       nextLayer.playbackRate = state.playbackSpeed;
+      
+      // Auto-rotate 270 if portrait and option is ON
+      if (state.isAutoRotateOn && chosen.isPortrait) {
+        nextLayer.classList.add('rotated-270');
+      } else {
+        nextLayer.classList.remove('rotated-270');
+      }
+
       if (state.isPlaying) {
         nextLayer.play().catch(() => {});
       }
@@ -937,6 +950,23 @@
       
       updateAllPreloadProgress();
     }
+  });
+
+  // Auto Rotate toggle
+  autoRotateBtn.addEventListener('click', () => {
+    state.isAutoRotateOn = !state.isAutoRotateOn;
+    autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
+    
+    // Apply to all active video layers immediately
+    videoGrid.querySelectorAll('.video-cell').forEach(cell => {
+      const activeLayer = cell.querySelector('.video-layer.active');
+      if (activeLayer) {
+        const vi = activeLayer._vi; // Need to store vi in layer
+        if (vi !== undefined && state.videoFiles[vi].isPortrait) {
+          activeLayer.classList.toggle('rotated-270', state.isAutoRotateOn);
+        }
+      }
+    });
   });
 
   // Audio toggle

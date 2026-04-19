@@ -629,6 +629,17 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   display: none;
 }
 
+.video-layer.rotated-270 {
+  transform: rotate(270deg) scale(1.7777); /* Scale to fit height-to-width flip (for 16:9 ratio) */
+  transform-origin: center;
+}
+
+.btn-toggle.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-hover);
+}
+
 .empty-state-content {
   text-align: center;
   color: var(--text-muted);

@@ -489,9 +489,8 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 10px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+  justify-content: space-between;
+  padding: 8px 8px 0 8px; /* Remove bottom padding */
   opacity: 0;
   transition: opacity var(--transition-normal);
   pointer-events: none;
@@ -507,11 +506,7 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-fast);
-  margin-left: auto;
-  margin-right: 8px;
+  margin-right: 4px;
 }
 
 .video-cell:hover .inline-seek-controls {
@@ -542,21 +537,41 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   height: 14px;
 }
 
-.video-cell-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.video-cell-header {
+  max-width: 80%;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  align-self: flex-start;
 }
 
 .video-cell-name {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.8);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
+  display: block;
+}
+
+.video-cell-controls-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3); /* Higher transparency */
+  backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  border-radius: 8px 8px 0 0; /* Only top corners rounded */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  align-self: center;
+  width: fit-content;
+  min-width: 280px;
 }
 
 .video-cell-time {
@@ -574,7 +589,11 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
 }
 
 .cell-mute-btn {
-  /* color handles svg color */
+  margin-right: 12px; /* Add distance between volume and seek controls */
+}
+
+.cell-skip-btn {
+  margin-left: 12px; /* Also add distance for discard button */
 }
 
 .cell-skip-btn:hover {

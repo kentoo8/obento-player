@@ -226,20 +226,50 @@
   // ===== Grid Rendering =====
 
   function renderGrid() {
-    // Update grid class
     videoGrid.className = `video-grid grid-${state.gridCount}`;
-
-    // Clear existing cells
-    videoGrid.innerHTML = '';
 
     if (state.videoFiles.length === 0) return;
 
-    for (let i = 0; i < state.gridCount; i++) {
-      const cell = createVideoCell(i);
-      videoGrid.appendChild(cell);
-    }
+    const currentCells = Array.from(videoGrid.querySelectorAll('.video-cell'));
+    const currentCount = currentCells.length;
 
-    assignRandomScenes();
+    if (currentCount < state.gridCount) {
+      // 必要な分だけセルを追加
+      const newCells = [];
+      for (let i = currentCount; i < state.gridCount; i++) {
+        const cell = createVideoCell(i);
+        videoGrid.appendChild(cell);
+        newCells.push(cell);
+      }
+      if (newCells.length > 0) {
+        assignRandomScenes(newCells);
+      }
+    } else if (currentCount > state.gridCount) {
+      // 不要なセルを削除してリソースを解放
+      for (let i = currentCount - 1; i >= state.gridCount; i--) {
+        const cell = currentCells[i];
+        if (cell._switchTimer) {
+          clearTimeout(cell._switchTimer);
+          cell._switchTimer = null;
+        }
+        
+        cell.querySelectorAll('.video-layer').forEach(v => {
+          v.pause();
+          v.removeAttribute('src');
+          v.src = '';
+          v.load();
+        });
+        
+        cell.remove();
+      }
+    } else if (currentCount === 0) {
+      // 初回レンダリング
+      for (let i = 0; i < state.gridCount; i++) {
+        const cell = createVideoCell(i);
+        videoGrid.appendChild(cell);
+      }
+      assignRandomScenes();
+    }
   }
 
   function createVideoCell(index) {
@@ -525,16 +555,21 @@
   // ===== Scene Assignment =====
 
   // 全セルに一括でシーンを割り当て（同バッチ内で重複なし）
-  function assignRandomScenes() {
+  // targetCells が指定された場合は、指定されたセルのみを新しいシーンで上書きし、それ以外のセルの状態は維持する
+  function assignRandomScenes(targetCells = null) {
     if (state.videoFiles.length === 0) return;
     if (state.segmentPool.length === 0) buildSegmentPool();
 
-    const cells = videoGrid.querySelectorAll('.video-cell');
+    const allCells = videoGrid.querySelectorAll('.video-cell');
+    const cellsToUpdate = targetCells || allCells;
+    
     const usedInBatch = new Set();
     const activeSegments = new Map(); // videoIndex -> [startTimes]
 
-    cells.forEach(cell => {
-      if (cell.dataset.pinned === "true") {
+    // 1. 更新対象「外」のセル、または「ピン留め」されているセルから、現在再生中の情報を収集する
+    allCells.forEach(cell => {
+      const isTarget = Array.from(cellsToUpdate).includes(cell);
+      if (!isTarget || cell.dataset.pinned === "true") {
         const activeLayer = cell.querySelector('.video-layer.active');
         if (activeLayer && activeLayer._segKey) {
           const parts = activeLayer._segKey.split(':');
@@ -544,8 +579,12 @@
           if (!activeSegments.has(vi)) activeSegments.set(vi, []);
           activeSegments.get(vi).push(t);
         }
-        return;
       }
+    });
+
+    // 2. 更新対象のセルに新しいシーンを割り当てる
+    cellsToUpdate.forEach(cell => {
+      if (cell.dataset.pinned === "true") return;
 
       const seg = popSegment(usedInBatch, activeSegments);
       usedInBatch.add(seg.key);

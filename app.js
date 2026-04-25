@@ -1165,13 +1165,23 @@
         }
         break;
       case 'KeyS':
-        if (state.videoFiles.length > 0) assignRandomScenes();
+        if (state.videoFiles.length > 0 && !document.body.classList.contains('focus-mode')) {
+          assignRandomScenes();
+        }
         break;
       case 'KeyF':
-        toggleCinemaMode();
+        if (!document.body.classList.contains('focus-mode')) {
+          toggleCinemaMode();
+        }
         break;
       case 'Escape':
-        if (document.body.classList.contains('cinema-mode')) {
+        if (document.body.classList.contains('focus-mode')) {
+          const focusedCell = document.querySelector('.video-cell.focused');
+          if (focusedCell) {
+            const btn = focusedCell.querySelector('.cell-focus-btn');
+            if (btn) btn.click();
+          }
+        } else if (document.body.classList.contains('cinema-mode')) {
           toggleCinemaMode();
         }
         break;

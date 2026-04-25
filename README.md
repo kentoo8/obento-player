@@ -65,3 +65,7 @@ multi-video-player/
 ├── style.css    # ダークテーマスタイル
 └── app.js       # 再生・切替ロジック
 ```
+
+## License
+
+MIT License - 詳細は [LICENSE](LICENSE) ファイルをご覧ください。

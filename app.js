@@ -313,8 +313,35 @@
           }
         }
       });
+
+      video.addEventListener('play', () => {
+        const activeLayer = cell.querySelector('.video-layer.active');
+        if (activeLayer === video) updateCellPlayPauseIcon();
+      });
+
+      video.addEventListener('pause', () => {
+        const activeLayer = cell.querySelector('.video-layer.active');
+        if (activeLayer === video) updateCellPlayPauseIcon();
+      });
+
       return video;
     }
+
+    function updateCellPlayPauseIcon() {
+      const btn = cell.querySelector('.cell-play-pause-btn');
+      if (!btn) return;
+      const activeLayer = cell.querySelector('.video-layer.active');
+      if (activeLayer) {
+        if (activeLayer.paused) {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>`;
+        } else {
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+        }
+      }
+    }
+
+    // セルオブジェクトにメソッドとして公開（applySegmentToCellから呼べるように）
+    cell._updatePlayPauseIcon = updateCellPlayPauseIcon;
 
     setupLayer(true);
     setupLayer(false);
@@ -447,12 +474,10 @@
       if (activeLayer) {
         if (activeLayer.paused) {
           activeLayer.play().catch(() => {});
-          playPauseBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
           // 再開時に切り替えタイマーをリセットして再スケジュール
           scheduleCellSwitch(cell, false);
         } else {
           activeLayer.pause();
-          playPauseBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>`;
           // 停止中は切り替えタイマーを止める
           if (cell._switchTimer) {
             clearTimeout(cell._switchTimer);
@@ -767,9 +792,11 @@
       }
       
       // クロスフェード実行
+      if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
+      if (cell._updatePlayPauseIcon) cell._updatePlayPauseIcon();
+      
       if (activeLayer) {
-        activeLayer.classList.remove('active');
         setTimeout(() => {
           activeLayer.pause();
           activeLayer._segKey = null; // キー解放

@@ -304,8 +304,8 @@
 
       video.addEventListener('ended', () => {
         if (video.classList.contains('active')) {
-          if (cell.dataset.pinned === "true") {
-            // ピン留め中は同じシーンを最初からループ再生
+          if (cell.dataset.pinned === "true" || cell.classList.contains('focused')) {
+            // ピン留め中、またはフォーカス中は同じシーンを最初からループ再生
             video.currentTime = 0;
             video.play().catch(()=>{});
           } else {
@@ -493,6 +493,7 @@
         document.body.classList.remove('focus-mode');
         cell.classList.remove('focused');
         focusBtn.innerHTML = focusIconSVG();
+        if (state.isPlaying) scheduleCellSwitch(cell, true);
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
             c.style.display = '';
@@ -510,6 +511,10 @@
         document.body.classList.add('focus-mode');
         cell.classList.add('focused');
         focusBtn.innerHTML = unfocusIconSVG();
+        if (cell._switchTimer) {
+          clearTimeout(cell._switchTimer);
+          cell._switchTimer = null;
+        }
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
             c.style.display = 'none';
@@ -667,7 +672,7 @@
   function scheduleCellSwitch(cell, stagger = false) {
     if (cell._switchTimer) clearTimeout(cell._switchTimer);
     if (!state.isPlaying) return;
-    if (cell.dataset.pinned === "true") return;
+    if (cell.dataset.pinned === "true" || cell.classList.contains('focused')) return;
 
     let delaySec = state.interval;
     if (stagger) {

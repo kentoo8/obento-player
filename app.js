@@ -1172,6 +1172,10 @@
         }
         break;
 
+      case 'KeyM':
+        setAudioState(!state.isAudioOn);
+        break;
+
       case 'Escape':
         if (document.body.classList.contains('focus-mode')) {
           const focusedCell = document.querySelector('.video-cell.focused');

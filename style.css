@@ -653,9 +653,7 @@ body.focus-mode .empty-state {
   border-color: var(--accent-hover);
 }
 
-.cell-mute-btn {
-  /* Margin moved to wrapper or removed */
-}
+
 
 /* ===== Alt-only Buttons (Alt Modifier) ===== */
 .alt-only-wrapper {

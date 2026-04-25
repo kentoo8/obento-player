@@ -376,6 +376,11 @@ body.focus-mode header:hover {
   width: 28px;
 }
 
+#moreMenu .grid-dropdown-content {
+  top: auto;
+  bottom: 0;
+}
+
 /* Volume button wrapper + vertical popup */
 .volume-btn-wrapper {
   position: relative;

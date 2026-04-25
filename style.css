@@ -657,14 +657,15 @@ body.focus-mode .empty-state {
   margin-right: 12px; /* Add distance between volume and seek controls */
 }
 
-/* ===== Skip Button (Alt Modifier) ===== */
-.skip-wrapper {
+/* ===== Alt-only Buttons (Alt Modifier) ===== */
+.alt-only-wrapper {
   display: none !important;
 }
 
-body.alt-pressed:not(.focus-mode) .skip-wrapper {
-  display: block !important;
+body.alt-pressed:not(.focus-mode) .alt-only-wrapper {
+  display: inline-flex !important;
 }
+
 
 body.alt-pressed .cell-skip-btn {
   color: #ff4d4d;

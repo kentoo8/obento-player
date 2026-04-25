@@ -710,12 +710,12 @@ body.alt-pressed .cell-skip-btn:hover {
 
 /* Audio button states */
 .btn.audio-on {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: var(--success);
-  color: var(--success);
+  background: var(--accent-glow);
+  border-color: var(--accent-primary);
+  color: var(--accent-secondary);
 }
 .btn.audio-on:hover {
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(99, 102, 241, 0.25);
 }
 
 

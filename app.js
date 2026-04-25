@@ -1147,7 +1147,17 @@
     switch (e.code) {
       case 'Space':
         e.preventDefault();
-        if (state.videoFiles.length > 0) togglePlay();
+        if (state.videoFiles.length > 0) {
+          if (document.body.classList.contains('focus-mode')) {
+            const focusedCell = document.querySelector('.video-cell.focused');
+            if (focusedCell) {
+              const btn = focusedCell.querySelector('.cell-play-pause-btn');
+              if (btn) btn.click();
+            }
+          } else {
+            togglePlay();
+          }
+        }
         break;
       case 'KeyS':
         if (state.videoFiles.length > 0) assignRandomScenes();

@@ -478,8 +478,7 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
 }
 
 .video-cell.focused .cell-pin-btn,
-.video-cell.focused .cell-skip-btn,
-.video-cell.focused .video-cell-controls-panel {
+.video-cell.focused .cell-skip-btn {
   display: none !important;
 }
 

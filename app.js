@@ -7,12 +7,15 @@
   'use strict';
 
   // ===== State =====
+  const savedGridCount = localStorage.getItem('mvp_gridCount');
+  const savedInterval = localStorage.getItem('mvp_interval');
+
   const state = {
     videoFiles: [],       // Array of { file: File, url: string }
     videoDurations: [],   // 各動画の長さ（秒）。null = 未取得
     segmentPool: [],      // シャッフル済みセグメント候補 [{videoIndex, startTime, key}]
-    gridCount: 4,
-    interval: 10,         // seconds
+    gridCount: savedGridCount ? parseInt(savedGridCount, 10) : 4,
+    interval: savedInterval ? parseInt(savedInterval, 10) : 10,         // seconds
     isPlaying: false,
     volume: 0.8,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
@@ -928,6 +931,7 @@
     opt.addEventListener('click', () => {
       const val = parseInt(opt.dataset.value, 10);
       state.gridCount = val;
+      localStorage.setItem('mvp_gridCount', val);
       gridDropdownOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       
@@ -972,12 +976,17 @@
   });
 
   // Initial UI Setup
+  intervalInput.value = state.interval;
+  gridDropdownOptions.forEach(o => {
+    o.classList.toggle('active', parseInt(o.dataset.value, 10) === state.gridCount);
+  });
   updateGridUI();
 
   intervalInput.addEventListener('change', () => {
     state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));
     state.interval = Math.round(state.interval / 5) * 5;
     intervalInput.value = state.interval;
+    localStorage.setItem('mvp_interval', state.interval);
     buildSegmentPool();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
@@ -987,6 +996,7 @@
   intervalDown.addEventListener('click', () => {
     state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
+    localStorage.setItem('mvp_interval', state.interval);
     buildSegmentPool();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
@@ -996,6 +1006,7 @@
   intervalUp.addEventListener('click', () => {
     state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
+    localStorage.setItem('mvp_interval', state.interval);
     buildSegmentPool();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));

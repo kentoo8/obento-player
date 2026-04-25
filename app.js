@@ -756,57 +756,75 @@
     e.preventDefault();
   });
 
-  document.addEventListener('drop', (e) => {
+  document.addEventListener('drop', async (e) => {
     e.preventDefault();
     dragCounter = 0;
     dropOverlay.classList.remove('active');
     
-    if (e.dataTransfer.items) {
-      handleDropItems(e.dataTransfer.items).then(files => {
-        if (files.length > 0) addVideoFiles(files);
-      });
-    } else if (e.dataTransfer.files.length > 0) {
-      addVideoFiles(e.dataTransfer.files);
-    }
-  });
-
-  async function handleDropItems(items) {
     const files = [];
-    const entries = [];
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.kind === 'file') {
-        const entry = item.webkitGetAsEntry();
-        if (entry) entries.push(entry);
+    
+    if (e.dataTransfer.items) {
+      const items = Array.from(e.dataTransfer.items);
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+          if (entry && entry.isDirectory) {
+            // ディレクトリの場合は再帰的に読み込む
+            await traverseFileTree(entry, files);
+          } else {
+            // ファイルの場合は直接 File オブジェクトを取得 (file:// 環境でのエラー回避)
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
+        }
+      }
+    } else if (e.dataTransfer.files) {
+      // フォールバック
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        files.push(e.dataTransfer.files[i]);
       }
     }
     
-    for (const entry of entries) {
-      await traverseFileTree(entry, files);
+    if (files.length > 0) {
+      addVideoFiles(files);
+    } else {
+      // file:// 環境などでフォルダの読み込みがセキュリティでブロックされた場合
+      alert('動画ファイルを読み込めませんでした。\nブラウザのセキュリティ制限により、ローカル環境(file://)ではフォルダのドラッグ＆ドロップが制限されている可能性があります。\n「追加」ボタンから動画を選択してください。');
     }
-    return files;
-  }
+  });
 
   function traverseFileTree(item, files) {
     return new Promise((resolve) => {
       if (item.isFile) {
-        item.file((file) => {
-          files.push(file);
-          resolve();
-        });
+        item.file(
+          (file) => {
+            files.push(file);
+            resolve();
+          },
+          (err) => {
+            console.warn('File entry read error (often due to file:// restriction):', err);
+            resolve();
+          }
+        );
       } else if (item.isDirectory) {
         const dirReader = item.createReader();
         const readAllEntries = () => {
-          dirReader.readEntries(async (entries) => {
-            if (entries.length > 0) {
-              for (const entry of entries) {
-                await traverseFileTree(entry, files);
+          dirReader.readEntries(
+            async (entries) => {
+              if (entries.length > 0) {
+                for (const entry of entries) {
+                  await traverseFileTree(entry, files);
+                }
+                readAllEntries(); // 残りのエントリを読み込む
+              } else {
+                resolve();
               }
-              readAllEntries(); // 残りのエントリを読み込む
-            } else {
+            },
+            (err) => {
+              console.warn('Directory read error:', err);
               resolve();
             }
-          });
+          );
         };
         readAllEntries();
       } else {

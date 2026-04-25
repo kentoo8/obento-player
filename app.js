@@ -1099,10 +1099,12 @@
   });
 
   // Close dropdowns when clicking outside
-  document.addEventListener('click', () => {
-    gridDropdown.classList.remove('open');
-    speedDropdown.classList.remove('open');
-    moreMenu.classList.remove('open');
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.grid-dropdown')) {
+      gridDropdown.classList.remove('open');
+      speedDropdown.classList.remove('open');
+      moreMenu.classList.remove('open');
+    }
   });
 
   // Initial UI Setup

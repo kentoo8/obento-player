@@ -1282,4 +1282,77 @@
     }
   });
 
+
+  // ===== Custom Tooltips =====
+  function initCustomTooltips() {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    document.body.appendChild(tooltip);
+
+    let tooltipTimeout;
+
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[title], [data-tooltip]');
+      if (!target) return;
+
+      // 既存のtitleを退避してブラウザのデフォルトを抑制
+      if (target.hasAttribute('title')) {
+        target.dataset.tooltip = target.getAttribute('title');
+        target.removeAttribute('title');
+      }
+
+      clearTimeout(tooltipTimeout);
+      tooltipTimeout = setTimeout(() => {
+        const text = target.dataset.tooltip;
+        if (!text) return;
+
+        tooltip.textContent = text;
+        tooltip.classList.add('visible');
+
+        const rect = target.getBoundingClientRect();
+        // ここで再計算（visibleにした後でないとwidth/heightが取れない場合がある）
+        const tw = tooltip.offsetWidth;
+        const th = tooltip.offsetHeight;
+
+        // 基本は要素の下に表示（ヘッダー用）
+        let top = rect.bottom + 8;
+        let left = rect.left + (rect.width / 2) - (tw / 2);
+
+        // 画面の下半分にある要素（セルコントロール用）は上に表示
+        if (rect.top > window.innerHeight / 2) {
+          top = rect.top - th - 8;
+        }
+
+        // 画面端の調整
+        if (left < 10) left = 10;
+        if (left + tw > window.innerWidth - 10) {
+          left = window.innerWidth - tw - 10;
+        }
+        
+        // 画面外（上）に出る場合の最終調整
+        if (top < 10) top = rect.bottom + 8;
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+      }, 500); // 0.5s delay
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      clearTimeout(tooltipTimeout);
+      tooltip.classList.remove('visible');
+    });
+
+    // 追加のケア：クリックやキー入力で隠す
+    document.addEventListener('mousedown', () => {
+      clearTimeout(tooltipTimeout);
+      tooltip.classList.remove('visible');
+    });
+    window.addEventListener('keydown', () => {
+      clearTimeout(tooltipTimeout);
+      tooltip.classList.remove('visible');
+    });
+  }
+
+  initCustomTooltips();
 })();
+

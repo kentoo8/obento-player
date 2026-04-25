@@ -106,7 +106,6 @@ header {
   opacity: 0;
   transform: translateY(-100%);
   transition: opacity var(--transition-normal), transform var(--transition-normal);
-  pointer-events: none;
 }
 
 /* Hover trigger area */
@@ -769,4 +768,24 @@ body.alt-pressed .cell-skip-btn:hover {
   .video-grid {
     height: calc(100vh - 110px);
   }
+}
+
+/* ===== Custom Tooltip ===== */
+.custom-tooltip {
+  position: fixed;
+  padding: 6px 10px;
+  background: rgba(18, 18, 26, 0.95);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  white-space: nowrap;
+}
+.custom-tooltip.visible {
+  opacity: 1;
 }

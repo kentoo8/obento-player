@@ -482,6 +482,11 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   display: none !important;
 }
 
+.video-cell.focused .top-right-controls > div {
+  background: none !important;
+  backdrop-filter: none !important;
+}
+
 .video-cell:hover {
   box-shadow: 0 0 0 1px var(--border-glow);
 }
@@ -527,10 +532,18 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   pointer-events: none;
 }
 
-.video-cell.focused .video-cell-top-bar,
 .video-cell.focused .video-cell-controls-panel {
   opacity: 0;
   pointer-events: auto;
+  transition: opacity var(--transition-normal);
+}
+
+.video-cell.focused .video-cell-top-bar {
+  pointer-events: auto;
+}
+
+.video-cell.focused .video-cell-header {
+  opacity: 0;
   transition: opacity var(--transition-normal);
 }
 
@@ -550,7 +563,7 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   z-index: -1;
 }
 
-.video-cell.focused .video-cell-top-bar:hover,
+.video-cell.focused .video-cell-top-bar:hover .video-cell-header,
 .video-cell.focused .video-cell-controls-panel:hover {
   opacity: 1;
 }

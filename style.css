@@ -669,7 +669,7 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   display: none !important;
 }
 
-body.alt-pressed .skip-wrapper {
+body.alt-pressed:not(.focus-mode) .skip-wrapper {
   display: block !important;
 }
 

@@ -67,7 +67,7 @@
 ## ファイル構成
 
 ```
-multi-player/
+multi-video-player/
 ├── index.html   # UI構造
 ├── style.css    # ダークテーマスタイル
 └── app.js       # 再生・切替ロジック

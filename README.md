@@ -1,5 +1,7 @@
 # Obento Player
 
+![Obento Player Preview](assets/preview.png)
+
 複数の動画をお弁当の具材のようにグリッド配置し、指定した時間ごとにランダムなシーンへ自動切り替えするブラウザベースのプレイヤー。
 
 ## ダウンロード方法

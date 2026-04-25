@@ -767,12 +767,25 @@
       const items = Array.from(e.dataTransfer.items);
       for (const item of items) {
         if (item.kind === 'file') {
+          // 現代のAPI (file://環境でもフォルダのドロップが動作する可能性が高い)
+          if (item.getAsFileSystemHandle) {
+            try {
+              const handle = await item.getAsFileSystemHandle();
+              if (handle) {
+                await traverseFileSystemHandle(handle, files);
+                continue;
+              }
+            } catch (err) {
+              console.warn('FileSystemHandle error:', err);
+              // エラーが起きてもフォールバックに処理を回す
+            }
+          }
+          
+          // フォールバック (webkitGetAsEntry)
           const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
           if (entry && entry.isDirectory) {
-            // ディレクトリの場合は再帰的に読み込む
             await traverseFileTree(entry, files);
           } else {
-            // ファイルの場合は直接 File オブジェクトを取得 (file:// 環境でのエラー回避)
             const file = item.getAsFile();
             if (file) files.push(file);
           }
@@ -788,10 +801,20 @@
     if (files.length > 0) {
       addVideoFiles(files);
     } else {
-      // file:// 環境などでフォルダの読み込みがセキュリティでブロックされた場合
-      alert('動画ファイルを読み込めませんでした。\nブラウザのセキュリティ制限により、ローカル環境(file://)ではフォルダのドラッグ＆ドロップが制限されている可能性があります。\n「追加」ボタンから動画を選択してください。');
+      alert('動画ファイルを読み込めませんでした。\nブラウザのセキュリティ制限により、ローカル環境(file://)ではフォルダのドラッグ＆ドロップが制限されている可能性があります。\n「追加」ボタンから動画を選択するか、モダンブラウザ(Chrome/Edge等)をお試しください。');
     }
   });
+
+  async function traverseFileSystemHandle(handle, files) {
+    if (handle.kind === 'file') {
+      const file = await handle.getFile();
+      files.push(file);
+    } else if (handle.kind === 'directory') {
+      for await (const entry of handle.values()) {
+        await traverseFileSystemHandle(entry, files);
+      }
+    }
+  }
 
   function traverseFileTree(item, files) {
     return new Promise((resolve) => {

@@ -332,7 +332,7 @@
             <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
             <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
           </div>
-          <div style="background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
+          <div class="skip-wrapper" style="background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
             <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
           </div>
         </div>
@@ -1147,6 +1147,10 @@
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt') {
+      document.body.classList.add('alt-pressed');
+    }
+
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
     switch (e.code) {

@@ -477,8 +477,7 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   border-radius: 0;
 }
 
-.video-cell.focused .cell-pin-btn,
-.video-cell.focused .cell-skip-btn {
+.video-cell.focused .cell-pin-btn {
   display: none !important;
 }
 
@@ -665,18 +664,23 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   margin-right: 12px; /* Add distance between volume and seek controls */
 }
 
-.cell-skip-btn {
-  margin-left: 12px; /* Also add distance for discard button */
+/* ===== Skip Button (Alt Modifier) ===== */
+.skip-wrapper {
+  display: none !important;
 }
 
-.cell-skip-btn:hover {
-  background: rgba(0,0,0,0.7);
-  color: var(--danger);
-  border-color: rgba(255,50,50,0.5);
+body.alt-pressed .skip-wrapper {
+  display: block !important;
 }
 
-.cell-skip-btn {
-  margin-left: 12px; /* 捨てるボタンを他のボタンから離す */
+body.alt-pressed .cell-skip-btn {
+  color: #ff4d4d;
+}
+
+body.alt-pressed .cell-skip-btn:hover {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+  border-color: rgba(255, 77, 77, 0.5);
 }
 
 .video-cell.is-pinned {

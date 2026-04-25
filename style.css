@@ -373,16 +373,19 @@ header {
   transition: height var(--transition-normal);
 }
 
-/* ===== Cinema Mode ===== */
-body.cinema-mode header {
+/* ===== Cinema & Focus Mode ===== */
+body.cinema-mode header,
+body.focus-mode header {
   display: none;
 }
 
-body.cinema-mode .video-grid {
+body.cinema-mode .video-grid,
+body.focus-mode .video-grid {
   height: 100vh;
 }
 
-body.cinema-mode .empty-state {
+body.cinema-mode .empty-state,
+body.focus-mode .empty-state {
   top: 0;
 }
 
@@ -472,6 +475,12 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   z-index: 50;
   background: #000;
   border-radius: 0;
+}
+
+.video-cell.focused .cell-pin-btn,
+.video-cell.focused .cell-skip-btn,
+.video-cell.focused .video-cell-controls-panel {
+  display: none !important;
 }
 
 .video-cell:hover {

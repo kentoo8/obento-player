@@ -490,6 +490,7 @@
       const isFocused = cell.classList.contains('focused');
       if (isFocused) {
         // Unfocus
+        document.body.classList.remove('focus-mode');
         cell.classList.remove('focused');
         focusBtn.innerHTML = focusIconSVG();
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
@@ -506,6 +507,7 @@
         });
       } else {
         // Focus this cell
+        document.body.classList.add('focus-mode');
         cell.classList.add('focused');
         focusBtn.innerHTML = unfocusIconSVG();
         videoGrid.querySelectorAll('.video-cell').forEach(c => {

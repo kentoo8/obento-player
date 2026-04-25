@@ -562,7 +562,7 @@ body.focus-mode .empty-state {
 /* Inline Seek controls */
 .inline-seek-controls {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   flex-shrink: 0;
   margin-right: 4px;
 }

@@ -336,13 +336,11 @@
           <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
           <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
           
-          <button class="small-seek-btn cell-focus-btn" style="margin-left: 12px;" title="単体フォーカス">${focusIconSVG()}</button>
+          <button class="small-seek-btn cell-mute-btn" style="margin-left: 12px;" title="個別にミュート/解除">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
+          <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
           
-          <div class="alt-only-wrapper" style="margin-left: 4px;">
+          <div class="alt-only-wrapper">
             <button class="small-seek-btn cell-pin-btn" title="ピン留め (Alt+ホバーで表示)">${pinIconSVG()}</button>
-          </div>
-          <div class="alt-only-wrapper" style="margin-left: 4px;">
-            <button class="small-seek-btn cell-mute-btn" title="個別にミュート/解除 (Alt+ホバーで表示)">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
           </div>
           <div class="alt-only-wrapper" style="margin-left: 12px;">
             <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (Alt+ホバーで表示)">${skipIconSVG()}</button>

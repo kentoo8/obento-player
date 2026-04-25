@@ -68,6 +68,8 @@
 | `.ogg` / `.ogv` | ✅ Firefox 中心 |
 | `.mov` / `.avi` / `.mkv` | ❌ ブラウザに依存 |
 
+非対応動画は ffmpeg などで .mp4 に変換することをオススメします。
+
 ## License
 
 MIT License - 詳細は [LICENSE](LICENSE) ファイルをご覧ください。

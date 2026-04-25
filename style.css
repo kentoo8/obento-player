@@ -106,28 +106,9 @@ header {
   left: 0;
   bottom: 0;
   z-index: 2000;
-  opacity: 0;
-  transform: translateX(-100%);
-  transition: opacity var(--transition-normal), transform var(--transition-normal);
-}
-
-/* Hover trigger area */
-header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -60px; /* Trigger zone to the right of the bar */
-  bottom: 0;
-  width: calc(var(--sidebar-width) + 60px);
-  pointer-events: auto;
-  z-index: -1;
-}
-
-header:hover,
-body.is-app-empty header {
   opacity: 1;
   transform: translateX(0);
-  pointer-events: auto;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
 }
 
 /* フォーカスモード中はホバーしてもバーを表示しない */
@@ -464,12 +445,14 @@ body.focus-mode header:hover {
   gap: 2px;
   background: var(--bg-primary);
   padding: 2px;
+  margin-left: var(--sidebar-width);
   transition: all var(--transition-normal);
 }
 
 /* ===== Focus Mode ===== */
 body.focus-mode .video-grid {
   height: 100vh;
+  margin-left: 0;
 }
 
 body.focus-mode .empty-state {
@@ -740,12 +723,20 @@ body.alt-pressed .cell-skip-btn:hover {
 /* ===== Empty State ===== */
 .empty-state {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sidebar-width);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
   background: var(--bg-primary);
+  transition: left var(--transition-normal);
+}
+
+body.focus-mode .empty-state {
+  left: 0;
 }
 
 .empty-state.hidden {

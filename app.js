@@ -1247,12 +1247,16 @@
           if (focusedCell) {
             const btn = focusedCell.querySelector('.cell-focus-btn');
             if (btn) btn.click();
+          } else {
+            document.body.classList.remove('focus-mode');
           }
         } else {
           const hoveredCell = document.querySelector('.video-cell:hover');
           if (hoveredCell) {
             const btn = hoveredCell.querySelector('.cell-focus-btn');
             if (btn) btn.click();
+          } else {
+            document.body.classList.add('focus-mode');
           }
         }
         break;

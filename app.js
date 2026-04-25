@@ -61,7 +61,6 @@
   const audioOffIcon = $('#audioOffIcon');
   const audioOnIcon = $('#audioOnIcon');
   const fullscreenBtn = $('#fullscreenBtn');
-  const exitCinemaBtn = $('#exitCinemaBtn');
 
   // ===== Video File Management =====
 
@@ -761,7 +760,6 @@
   }
 
   fullscreenBtn.addEventListener('click', toggleCinemaMode);
-  if (exitCinemaBtn) exitCinemaBtn.addEventListener('click', toggleCinemaMode);
 
   // ===== Utility =====
 

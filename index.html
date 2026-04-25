@@ -28,7 +28,7 @@
     <!-- Video cells are dynamically generated -->
   </main>
 
-  <!-- Header / Controls (Moved to Bottom) -->
+  <!-- Header / Controls -->
   <header id="header">
     <div class="header-left">
       <h1 class="logo" id="appLogo" title="全リセット（初期状態に戻す）" style="cursor: pointer;">
@@ -36,98 +36,112 @@
         Multi Player
       </h1>
     </div>
+
+    <!-- グループ1・2を中央寄せでまとめる -->
     <div class="header-center">
-      <div class="control-group" title="シーンの切替間隔">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></svg>
-        <div class="interval-control">
-          <button id="intervalDown" class="interval-btn" title="減らす">−</button>
-          <input type="number" id="intervalInput" value="10" min="5" max="300" step="5">
-          <span class="unit">秒</span>
-          <button id="intervalUp" class="interval-btn" title="増やす">+</button>
+      <!-- グループ1: 間隔・レイアウト -->
+      <div class="header-group">
+        <div class="control-group" title="シーンの切替間隔">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary);"><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></svg>
+          <div class="interval-control">
+            <button id="intervalDown" class="interval-btn" title="減らす">−</button>
+            <input type="number" id="intervalInput" value="10" min="5" max="300" step="5">
+            <span class="unit">秒</span>
+            <button id="intervalUp" class="interval-btn" title="増やす">+</button>
+          </div>
         </div>
-      </div>
-      <div class="control-group">
-        <div id="gridDropdown" class="grid-dropdown">
-          <button id="gridDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="レイアウト切り替え">
-            <span id="gridIconContainer"></span>
-            <span id="gridCountLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 500;">4</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div id="gridDropdownContent" class="grid-dropdown-content">
-            <div class="grid-dropdown-option" data-value="1" title="1 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor"/></svg>
-              <span>1 画面</span>
-            </div>
-            <div class="grid-dropdown-option" data-value="2" title="2 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="18" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="18" rx="1" fill="currentColor"/></svg>
-              <span>2 画面</span>
-            </div>
-            <div class="grid-dropdown-option active" data-value="4" title="4 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/></svg>
-              <span>4 画面</span>
-            </div>
-            <div class="grid-dropdown-option" data-value="6" title="6 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/></svg>
-              <span>6 画面</span>
-            </div>
-            <div class="grid-dropdown-option" data-value="8" title="8 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="3" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/></svg>
-              <span>8 画面</span>
-            </div>
-            <div class="grid-dropdown-option" data-value="9" title="9 画面">
-              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="0.5" fill="currentColor"/></svg>
-              <span>9 画面</span>
+        <div class="control-group">
+          <div id="gridDropdown" class="grid-dropdown">
+            <button id="gridDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="レイアウト切り替え">
+              <span id="gridIconContainer"></span>
+              <span id="gridCountLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 500;">4</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="gridDropdownContent" class="grid-dropdown-content">
+              <div class="grid-dropdown-option" data-value="1" title="1 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor"/></svg>
+                <span>1 画面</span>
+              </div>
+              <div class="grid-dropdown-option" data-value="2" title="2 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="18" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="18" rx="1" fill="currentColor"/></svg>
+                <span>2 画面</span>
+              </div>
+              <div class="grid-dropdown-option active" data-value="4" title="4 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/></svg>
+                <span>4 画面</span>
+              </div>
+              <div class="grid-dropdown-option" data-value="6" title="6 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/></svg>
+                <span>6 画面</span>
+              </div>
+              <div class="grid-dropdown-option" data-value="8" title="8 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="3" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/></svg>
+                <span>8 画面</span>
+              </div>
+              <div class="grid-dropdown-option" data-value="9" title="9 画面">
+                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="0.5" fill="currentColor"/></svg>
+                <span>9 画面</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="control-group">
-        <div id="speedDropdown" class="grid-dropdown">
-          <button id="speedDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="再生速度">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
-            <span id="speedLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 600;">1.0x</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div id="speedDropdownContent" class="grid-dropdown-content">
-            <div class="grid-dropdown-option" data-value="0.5"><span>0.5x</span></div>
-            <div class="grid-dropdown-option active" data-value="1.0"><span>1.0x (標準)</span></div>
-            <div class="grid-dropdown-option" data-value="1.25"><span>1.25x</span></div>
-            <div class="grid-dropdown-option" data-value="1.5"><span>1.5x</span></div>
-            <div class="grid-dropdown-option" data-value="2.0"><span>2.0x</span></div>
-            <div class="grid-dropdown-option" data-value="2.5"><span>2.5x</span></div>
-            <div class="grid-dropdown-option" data-value="3.0"><span>3.0x</span></div>
+
+      <!-- セパレーター -->
+      <div class="header-sep"></div>
+
+      <!-- グループ2: 再生速度・再生・音量 -->
+      <div class="header-group">
+        <div class="control-group">
+          <div id="speedDropdown" class="grid-dropdown">
+            <button id="speedDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="再生速度">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+              <span id="speedLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 600;">1.0x</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="speedDropdownContent" class="grid-dropdown-content">
+              <div class="grid-dropdown-option" data-value="0.5"><span>0.5x</span></div>
+              <div class="grid-dropdown-option active" data-value="1.0"><span>1.0x (標準)</span></div>
+              <div class="grid-dropdown-option" data-value="1.25"><span>1.25x</span></div>
+              <div class="grid-dropdown-option" data-value="1.5"><span>1.5x</span></div>
+              <div class="grid-dropdown-option" data-value="2.0"><span>2.0x</span></div>
+              <div class="grid-dropdown-option" data-value="2.5"><span>2.5x</span></div>
+              <div class="grid-dropdown-option" data-value="3.0"><span>3.0x</span></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="control-group">
-        <button id="audioToggleBtn" class="btn btn-secondary audio-off icon-only" title="音声 ON/OFF">
-          <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+        <button id="playAllBtn" class="btn btn-primary" title="全て再生 / 一時停止">
+          <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5,3 19,12 5,21"/>
           </svg>
-          <svg id="audioOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/>
+          <svg id="pauseIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
           </svg>
         </button>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8">
+        <div class="control-group">
+          <button id="audioToggleBtn" class="btn btn-secondary audio-off icon-only" title="音声 ON/OFF">
+            <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+            <svg id="audioOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/>
+            </svg>
+          </button>
+          <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8">
+        </div>
       </div>
     </div>
+
+    <!-- 右端: ファイル追加・シャッフル・自動回転 -->
     <div class="header-right">
       <button id="addFilesBtn" class="btn btn-secondary icon-only" title="ファイルを追加">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      </button>
-      <button id="playAllBtn" class="btn btn-primary" title="全て再生 / 一時停止">
-        <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5,3 19,12 5,21"/>
-        </svg>
-        <svg id="pauseIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-          <rect x="6" y="4" width="4" height="16"/>
-          <rect x="14" y="4" width="4" height="16"/>
         </svg>
       </button>
       <button id="shuffleBtn" class="btn btn-secondary icon-only" title="シーンをシャッフル">
@@ -139,14 +153,12 @@
           <line x1="4" y1="4" x2="9" y2="9"/>
         </svg>
       </button>
-      <div class="control-group">
-        <button id="autoRotateBtn" class="btn btn-secondary btn-toggle icon-only" title="縦動画を自動回転して横長にする">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 4v6h-6"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-          </svg>
-        </button>
-      </div>
+      <button id="autoRotateBtn" class="btn btn-secondary btn-toggle icon-only" title="縦動画を自動回転して横長にする">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
     </div>
     <input type="file" id="fileInput" multiple accept="video/*" style="display:none">
   </header>
@@ -165,7 +177,7 @@
         <line x1="17" y1="17" x2="22" y2="17"/>
       </svg>
       <h2>動画をドラッグ＆ドロップ</h2>
-      <p>または下のボタンからファイルを選択してください</p>
+      <p>またはボタンからファイルを選択してください</p>
       <button id="emptyAddBtn" class="btn btn-primary btn-lg">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"/>

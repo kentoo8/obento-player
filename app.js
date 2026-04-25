@@ -339,7 +339,7 @@
           <button class="small-seek-btn cell-focus-btn" style="margin-left: 12px;" title="単体フォーカス">${focusIconSVG()}</button>
           <button class="small-seek-btn cell-pin-btn" style="margin-left: 4px;" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
           <div class="skip-wrapper" style="display: inline-flex;">
-            <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
+            <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (Alt+ホバーで表示)">${skipIconSVG()}</button>
           </div>
         </div>
         <span class="video-cell-time"></span>
@@ -468,7 +468,7 @@
         state.blacklistedVideos.add(vi);
         buildSegmentPool();
         
-        // スキップされた動画を表示しているすべてのセルを新しいシーンへ切り替える
+        // 除外された動画を表示しているすべてのセルを新しいシーンへ切り替える
         const cells = videoGrid.querySelectorAll('.video-cell');
         cells.forEach(c => {
           const layer = c.querySelector('.video-layer.active');

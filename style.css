@@ -128,14 +128,37 @@ body.is-app-empty header {
   pointer-events: auto;
 }
 
-.header-left, .header-center, .header-right {
+
+.header-left, .header-right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+.header-right {
+  margin-left: auto;
+}
+
 .header-center {
-  gap: 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.header-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  flex-shrink: 0;
+  margin: 0 24px;
 }
 
 .logo {

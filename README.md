@@ -57,14 +57,6 @@
 | `.ogg` / `.ogv` | ✅ Firefox 中心 |
 | `.mov` / `.avi` / `.mkv` | ❌ ブラウザに依存（再生できない場合があります） |
 
-## ファイル構成
-
-```
-multi-video-player/
-├── index.html   # UI構造
-├── style.css    # ダークテーマスタイル
-└── app.js       # 再生・切替ロジック
-```
 
 ## License
 

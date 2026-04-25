@@ -91,20 +91,20 @@ html, body {
 header {
   height: var(--header-height);
   background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   gap: 16px;
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 2000;
   opacity: 0;
-  transform: translateY(100%);
+  transform: translateY(-100%);
   transition: opacity var(--transition-normal), transform var(--transition-normal);
   pointer-events: none;
 }
@@ -113,7 +113,7 @@ header {
 header::after {
   content: '';
   position: absolute;
-  top: -60px; /* Trigger zone above the bar */
+  bottom: -60px; /* Trigger zone below the bar */
   left: 0;
   right: 0;
   height: calc(var(--header-height) + 60px);
@@ -246,7 +246,7 @@ body.is-app-empty header {
 
 .grid-dropdown-content {
   position: absolute;
-  bottom: calc(100% + 8px);
+  top: calc(100% + 8px);
   left: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-color);

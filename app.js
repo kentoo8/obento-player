@@ -323,17 +323,9 @@
     const overlay = document.createElement('div');
     overlay.className = 'video-cell-overlay';
     overlay.innerHTML = `
-      <div class="video-cell-top-bar" style="display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; width: 100%;">
+      <div class="video-cell-top-bar" style="display: flex; justify-content: flex-start; align-items: flex-start; pointer-events: auto; width: 100%;">
         <div class="video-cell-header">
           <span class="video-cell-name"></span>
-        </div>
-        <div class="top-right-controls" style="display: flex; gap: 8px;">
-          <div style="background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
-            <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
-          </div>
-          <div class="skip-wrapper" style="background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
-            <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
-          </div>
         </div>
       </div>
       <div class="video-cell-controls-panel">
@@ -345,6 +337,10 @@
           <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
           <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
           <button class="small-seek-btn cell-focus-btn" style="margin-left: 12px;" title="単体フォーカス">${focusIconSVG()}</button>
+          <button class="small-seek-btn cell-pin-btn" style="margin-left: 4px;" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
+          <div class="skip-wrapper" style="display: inline-flex;">
+            <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
+          </div>
         </div>
         <span class="video-cell-time"></span>
       </div>

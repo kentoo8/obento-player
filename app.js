@@ -323,20 +323,28 @@
     const overlay = document.createElement('div');
     overlay.className = 'video-cell-overlay';
     overlay.innerHTML = `
-      <div class="video-cell-header">
-        <span class="video-cell-name"></span>
+      <div class="video-cell-top-bar" style="display: flex; justify-content: space-between; align-items: flex-start; pointer-events: auto; width: 100%;">
+        <div class="video-cell-header">
+          <span class="video-cell-name"></span>
+        </div>
+        <div class="top-right-controls" style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
+            <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
+            <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
+          </div>
+          <div style="background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px);">
+            <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
+          </div>
+        </div>
       </div>
       <div class="video-cell-controls-panel">
         <div class="inline-seek-controls">
-          <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
-          <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
           <button class="small-seek-btn cell-mute-btn" title="個別にミュート/解除">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
           <button class="small-seek-btn prev-vid-btn" title="前の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg></button>
           <button class="small-seek-btn rew-btn" title="10秒戻る"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg></button>
           <button class="small-seek-btn cell-play-pause-btn" title="再生 / 一時停止">${state.isPlaying ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>'}</button>
           <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
           <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
-          <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (捨てる)">${skipIconSVG()}</button>
         </div>
         <span class="video-cell-time"></span>
       </div>

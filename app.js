@@ -60,7 +60,6 @@
   const audioToggleBtn = $('#audioToggleBtn');
   const audioOffIcon = $('#audioOffIcon');
   const audioOnIcon = $('#audioOnIcon');
-  const fullscreenBtn = $('#fullscreenBtn');
 
   // ===== Video File Management =====
 
@@ -96,6 +95,7 @@
     }
     if (state.videoFiles.length > 0) {
       emptyState.classList.add('hidden');
+      document.body.classList.remove('is-app-empty');
       renderGrid();
       if (!state.isPlaying) {
         setAudioState(true); // 自動で音声ONにする
@@ -808,29 +808,8 @@
     }
   }
 
-  // ===== Cinema Mode =====
 
-  let cinemaToastTimer = null;
 
-  function showCinemaToast(msg) {
-    let toast = document.querySelector('.cinema-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'cinema-toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(cinemaToastTimer);
-    cinemaToastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
-  }
-
-  function toggleCinemaMode() {
-    const isOn = document.body.classList.toggle('cinema-mode');
-    showCinemaToast(isOn ? '動画のみ表示中 — F キーで戻る' : 'コントロール表示に戻りました');
-  }
-
-  fullscreenBtn.addEventListener('click', toggleCinemaMode);
 
   // ===== Utility =====
 
@@ -1104,6 +1083,7 @@
       // Reset UI
       videoGrid.innerHTML = '';
       emptyState.classList.remove('hidden'); // Use class instead of inline style
+      document.body.classList.add('is-app-empty');
       videoGrid.style.display = ''; // Reset inline style
       
       updateAllPreloadProgress();
@@ -1173,11 +1153,7 @@
           assignRandomScenes();
         }
         break;
-      case 'KeyF':
-        if (!document.body.classList.contains('focus-mode')) {
-          toggleCinemaMode();
-        }
-        break;
+
       case 'Escape':
         if (document.body.classList.contains('focus-mode')) {
           const focusedCell = document.querySelector('.video-cell.focused');
@@ -1185,8 +1161,6 @@
             const btn = focusedCell.querySelector('.cell-focus-btn');
             if (btn) btn.click();
           }
-        } else if (document.body.classList.contains('cinema-mode')) {
-          toggleCinemaMode();
         }
         break;
       case 'ArrowUp':

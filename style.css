@@ -91,14 +91,41 @@ html, body {
 header {
   height: var(--header-height);
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   gap: 16px;
-  position: relative;
-  z-index: 100;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+  pointer-events: none;
+}
+
+/* Hover trigger area */
+header::after {
+  content: '';
+  position: absolute;
+  top: -60px; /* Trigger zone above the bar */
+  left: 0;
+  right: 0;
+  height: calc(var(--header-height) + 60px);
+  pointer-events: auto;
+  z-index: -1;
+}
+
+header:hover,
+body.is-app-empty header {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .header-left, .header-center, .header-right {
@@ -219,7 +246,7 @@ header {
 
 .grid-dropdown-content {
   position: absolute;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 8px);
   left: 0;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -365,90 +392,24 @@ header {
 /* ===== Video Grid ===== */
 .video-grid {
   position: relative;
-  height: calc(100vh - var(--header-height));
+  height: 100vh;
   display: grid;
   gap: 2px;
   background: var(--bg-primary);
   padding: 2px;
-  transition: height var(--transition-normal);
+  transition: all var(--transition-normal);
 }
 
-/* ===== Cinema & Focus Mode ===== */
-body.cinema-mode header,
-body.focus-mode header {
-  display: none;
-}
-
-body.cinema-mode .video-grid,
+/* ===== Focus Mode ===== */
 body.focus-mode .video-grid {
   height: 100vh;
 }
 
-body.cinema-mode .empty-state,
 body.focus-mode .empty-state {
   top: 0;
 }
 
-/* ===== Floating Cinema Buttons ===== */
-.floating-cinema-btn {
-  position: fixed;
-  top: 8px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: white;
-  border-radius: 50%;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
 
-.floating-cinema-btn:hover {
-  background: rgba(0, 0, 0, 0.85);
-  transform: scale(1.05);
-}
-
-/* Visibility Control */
-
-.floating-cinema-btn.exit-btn {
-  opacity: 0;
-  pointer-events: none;
-}
-body.cinema-mode .floating-cinema-btn.exit-btn {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Toast hint */
-.cinema-toast {
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(12px);
-  color: rgba(255,255,255,0.85);
-  font-size: 0.82rem;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.12);
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.cinema-toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
 
 .grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }

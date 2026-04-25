@@ -517,7 +517,41 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
   z-index: 10;
 }
 
-.video-cell:hover .video-cell-overlay {
+.video-cell:not(.focused):hover .video-cell-overlay {
+  opacity: 1;
+}
+
+/* ===== Focus Mode Independent Hover Areas ===== */
+.video-cell.focused .video-cell-overlay {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.video-cell.focused .video-cell-top-bar,
+.video-cell.focused .video-cell-controls-panel {
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity var(--transition-normal);
+}
+
+.video-cell.focused .video-cell-top-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 25vh;
+  z-index: -1;
+}
+
+.video-cell.focused .video-cell-controls-panel::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 25vh;
+  z-index: -1;
+}
+
+.video-cell.focused .video-cell-top-bar:hover,
+.video-cell.focused .video-cell-controls-panel:hover {
   opacity: 1;
 }
 

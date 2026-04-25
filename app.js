@@ -48,7 +48,6 @@
   const playAllBtn = $('#playAllBtn');
   const playIcon = $('#playIcon');
   const pauseIcon = $('#pauseIcon');
-  const playBtnText = $('#playBtnText');
   const shuffleBtn = $('#shuffleBtn');
   const addFilesBtn = $('#addFilesBtn');
   const emptyAddBtn = $('#emptyAddBtn');
@@ -684,7 +683,6 @@
       
       playIcon.style.display = 'none';
       pauseIcon.style.display = 'block';
-      playBtnText.textContent = '停止';
     } else {
       videoGrid.querySelectorAll('.video-layer').forEach(v => v.pause());
       
@@ -694,7 +692,6 @@
       
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
-      playBtnText.textContent = '再生';
     }
   }
 

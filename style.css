@@ -329,6 +329,13 @@ header {
   box-shadow: 0 0 20px var(--accent-glow);
 }
 
+#playAllBtn {
+  min-width: 80px;
+  padding-left: 24px;
+  padding-right: 24px;
+  justify-content: center;
+}
+
 .btn-secondary {
   background: var(--bg-card);
   color: var(--text-primary);

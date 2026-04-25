@@ -1277,4 +1277,23 @@
     }
   });
 
+  // Ensure Alt key state is accurately tracked even if key events are missed
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt') {
+      document.body.classList.remove('alt-pressed');
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    document.body.classList.remove('alt-pressed');
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (e.altKey) {
+      document.body.classList.add('alt-pressed');
+    } else {
+      document.body.classList.remove('alt-pressed');
+    }
+  });
+
 })();

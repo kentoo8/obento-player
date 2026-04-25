@@ -23,6 +23,7 @@
     activePreloads: 0,
     playbackSpeed: 1.0,
     isAutoRotateOn: false,
+    autoRotateDegree: 270,
     blacklistedVideos: new Set(),
   };
 
@@ -787,11 +788,12 @@
       }
       nextLayer.playbackRate = state.playbackSpeed;
       
-      // Auto-rotate 270 if portrait and option is ON
+      // Auto-rotate if portrait and option is ON
       if (state.isAutoRotateOn && chosen.isPortrait) {
-        nextLayer.classList.add('rotated-270');
+        nextLayer.classList.remove('rotated-270', 'rotated-90');
+        nextLayer.classList.add(`rotated-${state.autoRotateDegree}`);
       } else {
-        nextLayer.classList.remove('rotated-270');
+        nextLayer.classList.remove('rotated-270', 'rotated-90');
       }
 
       if (state.isPlaying) {
@@ -1144,17 +1146,26 @@
   });
 
   // Auto Rotate toggle
-  autoRotateBtn.addEventListener('click', () => {
+  autoRotateBtn.addEventListener('click', (e) => {
     state.isAutoRotateOn = !state.isAutoRotateOn;
+    
+    if (state.isAutoRotateOn) {
+      state.autoRotateDegree = e.altKey ? 90 : 270;
+    }
+
     autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
+    autoRotateBtn.classList.toggle('is-90', state.isAutoRotateOn && state.autoRotateDegree === 90);
     
     // Apply to all active video layers immediately
     videoGrid.querySelectorAll('.video-cell').forEach(cell => {
       const activeLayer = cell.querySelector('.video-layer.active');
       if (activeLayer) {
-        const vi = activeLayer._vi; // Need to store vi in layer
+        const vi = activeLayer._vi; 
         if (vi !== undefined && state.videoFiles[vi].isPortrait) {
-          activeLayer.classList.toggle('rotated-270', state.isAutoRotateOn);
+          activeLayer.classList.remove('rotated-270', 'rotated-90');
+          if (state.isAutoRotateOn) {
+            activeLayer.classList.add(`rotated-${state.autoRotateDegree}`);
+          }
         }
       }
     });

@@ -388,8 +388,8 @@ body.cinema-mode .empty-state {
 /* ===== Floating Cinema Buttons ===== */
 .floating-cinema-btn {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: 8px;
+  right: 20px;
   width: 48px;
   height: 48px;
   background: rgba(0, 0, 0, 0.65);
@@ -412,14 +412,6 @@ body.cinema-mode .empty-state {
 }
 
 /* Visibility Control */
-.floating-cinema-btn.enter-btn {
-  opacity: 1;
-  pointer-events: auto;
-}
-body.cinema-mode .floating-cinema-btn.enter-btn {
-  opacity: 0;
-  pointer-events: none;
-}
 
 .floating-cinema-btn.exit-btn {
   opacity: 0;

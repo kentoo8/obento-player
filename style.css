@@ -100,7 +100,7 @@ header {
   align-items: center;
   justify-content: flex-start;
   padding: 20px 0;
-  gap: 24px;
+  gap: 16px;
   position: fixed;
   top: 0;
   left: 0;
@@ -212,11 +212,12 @@ body.focus-mode header:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 4px 2px;
+  padding: 4px;
+  width: 48px;
 }
 
 .interval-btn {
@@ -274,9 +275,31 @@ body.focus-mode header:hover {
 
 .grid-dropdown-trigger {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  min-width: 70px;
   justify-content: center;
+  padding: 6px 4px;
+  width: 56px;
+  min-width: 0;
+  gap: 2px;
+}
+
+#gridIconContainer, .grid-dropdown-trigger svg:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.grid-dropdown-trigger span:not(#gridIconContainer) {
+  font-size: 0.65rem !important;
+  margin-left: 0 !important;
+}
+
+/* 最後の要素（矢印アイコン）のみを隠す。ただし、アイコンコンテナ自体を隠さないようにする */
+.grid-dropdown-trigger > svg:last-child {
+  display: none !important;
 }
 
 .grid-dropdown-content {
@@ -394,10 +417,13 @@ body.focus-mode header:hover {
 }
 
 #playAllBtn {
-  min-width: 80px;
-  padding-left: 24px;
-  padding-right: 24px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  border-radius: 50%; /* Circle for play button makes it stand out without being bulky */
 }
 
 .btn-secondary {

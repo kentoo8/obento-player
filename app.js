@@ -1,5 +1,5 @@
 /**
- * Multi Video Player
+ * Obento Player
  * 複数の動画をグリッド表示し、指定時間ごとにランダムなシーンへ切り替えるプレイヤー
  */
 

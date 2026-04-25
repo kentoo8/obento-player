@@ -1030,6 +1030,9 @@
   // Shuffle
   shuffleBtn.addEventListener('click', () => {
     if (state.videoFiles.length === 0) return;
+    gridDropdown.classList.remove('open');
+    speedDropdown.classList.remove('open');
+    moreMenu.classList.remove('open');
     assignRandomScenes();
   });
 

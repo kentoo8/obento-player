@@ -605,12 +605,18 @@ body.cinema-mode .floating-cinema-btn.exit-btn {
 }
 
 .video-cell-header {
-  max-width: 80%;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-right: 8px;
   background: rgba(0, 0, 0, 0.4);
   padding: 4px 8px;
   border-radius: 4px;
   backdrop-filter: blur(4px);
   align-self: flex-start;
+}
+
+.top-right-controls {
+  flex: 0 0 auto;
 }
 
 .video-cell-name {

@@ -62,6 +62,9 @@
   const audioOffIcon = $('#audioOffIcon');
   const audioOnIcon = $('#audioOnIcon');
 
+  const moreMenu = $('#moreMenu');
+  const moreMenuBtn = $('#moreMenuBtn');
+
   // ===== Video File Management =====
 
   const VIDEO_EXTS = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
@@ -1025,7 +1028,8 @@
   // Grid Dropdown Toggle
   gridDropdownBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    speedDropdown.classList.remove('open'); // Close other
+    speedDropdown.classList.remove('open');
+    moreMenu.classList.remove('open');
     gridDropdown.classList.toggle('open');
   });
 
@@ -1051,7 +1055,8 @@
   // Speed Dropdown Toggle
   speedDropdownBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    gridDropdown.classList.remove('open'); // Close other
+    gridDropdown.classList.remove('open');
+    moreMenu.classList.remove('open');
     speedDropdown.classList.toggle('open');
   });
 
@@ -1072,10 +1077,19 @@
     });
   });
 
+  // More Menu Toggle
+  moreMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    gridDropdown.classList.remove('open');
+    speedDropdown.classList.remove('open');
+    moreMenu.classList.toggle('open');
+  });
+
   // Close dropdowns when clicking outside
   document.addEventListener('click', () => {
     gridDropdown.classList.remove('open');
     speedDropdown.classList.remove('open');
+    moreMenu.classList.remove('open');
   });
 
   // Initial UI Setup

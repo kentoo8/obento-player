@@ -329,6 +329,53 @@ body.focus-mode header:hover {
   flex-shrink: 0;
 }
 
+/* More Menu specific */
+.more-menu-content {
+  min-width: 200px !important;
+  padding: 8px !important;
+  gap: 4px;
+}
+
+.more-menu-content .menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.more-menu-content .menu-btn-item {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.more-menu-content .menu-btn-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.more-menu-content .menu-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.more-menu-content .interval-control {
+  width: 70px;
+  flex-direction: row;
+  padding: 2px 4px;
+}
+
+.more-menu-content #intervalInput {
+  width: 28px;
+}
+
 /* Volume button wrapper + vertical popup */
 .volume-btn-wrapper {
   position: relative;

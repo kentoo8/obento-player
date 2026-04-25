@@ -767,6 +767,12 @@ body.focus-mode .empty-state {
   background: rgba(255, 255, 255, 0.35);
 }
 
+.small-seek-btn.is-solo {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
 .small-seek-btn svg {
   width: 14px;
   height: 14px;

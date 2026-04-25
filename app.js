@@ -25,6 +25,7 @@
     isAutoRotateOn: false,
     autoRotateDegree: 270,
     blacklistedVideos: new Set(),
+    soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
 
   // ===== DOM Refs =====
@@ -292,7 +293,15 @@
     function setupLayer(isActive) {
       const video = document.createElement('video');
       video.className = isActive ? 'video-layer active' : 'video-layer';
-      video.muted = !state.isAudioOn;
+      
+      // 初期ミュート状態の決定
+      const cellIndex = parseInt(cell.dataset.index, 10);
+      let shouldMute = !state.isAudioOn;
+      if (state.soloCellIndex !== null) {
+        shouldMute = (state.soloCellIndex !== cellIndex);
+      }
+      
+      video.muted = shouldMute;
       video.loop = false;
       video.playsInline = true;
       video.preload = 'auto';
@@ -368,7 +377,7 @@
           <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
           <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
           
-          <button class="small-seek-btn cell-mute-btn" style="margin-left: 12px;" title="個別にミュート/解除">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
+          <button class="small-seek-btn cell-mute-btn" style="margin-left: 12px;" title="ソロ再生（この動画のみ音を出す）">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
           <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
           
           <div class="alt-only-wrapper">
@@ -456,19 +465,24 @@
       }
     });
 
-    // Mute toggle
+    // Solo toggle (Changed from individual mute)
     const muteBtn = overlay.querySelector('.cell-mute-btn');
     muteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isMuted = cell.dataset.muted === "true";
-      cell.dataset.muted = isMuted ? "false" : "true";
-      const layers = cell.querySelectorAll('.video-layer');
-      const m = cell.dataset.muted === "true";
-      layers.forEach(v => {
-        v.muted = m;
-        if (!m) v.volume = state.volume;
-      });
-      updateMuteButtons();
+      const cellIndex = parseInt(cell.dataset.index, 10);
+      
+      if (state.soloCellIndex === cellIndex) {
+        state.soloCellIndex = null; // Solo OFF
+      } else {
+        state.soloCellIndex = cellIndex; // Solo this cell
+        if (!state.isAudioOn) {
+          // ソロにした時は全体設定がOFFでも音が出るように、内部的にはON扱いにするか検討
+          // ユーザーの意図としては「この音を出したい」なので、全体をONにする
+          setAudioState(true);
+          state.soloCellIndex = cellIndex; // setAudioStateでnullになるので再度セット
+        }
+      }
+      syncAudio();
     });
 
     // Individual Play / Pause toggle
@@ -633,21 +647,40 @@
     cells.forEach(cell => {
       const btn = cell.querySelector('.cell-mute-btn');
       if (btn) {
-        btn.innerHTML = cell.dataset.muted === "true" ? muteIconSVG() : unmuteIconSVG();
+        const isMuted = cell.dataset.muted === "true";
+        const isSolo = state.soloCellIndex === parseInt(cell.dataset.index, 10);
+        btn.innerHTML = isMuted ? muteIconSVG() : unmuteIconSVG();
+        btn.classList.toggle('is-solo', isSolo);
       }
     });
+  }
+
+  // 全セルの音声状態を現在の state に同期する
+  function syncAudio() {
+    const cells = videoGrid.querySelectorAll('.video-cell');
+    cells.forEach(cell => {
+      const idx = parseInt(cell.dataset.index, 10);
+      let shouldMute = !state.isAudioOn;
+      
+      if (state.soloCellIndex !== null) {
+        shouldMute = (state.soloCellIndex !== idx);
+      }
+      
+      cell.dataset.muted = shouldMute ? "true" : "false";
+      cell.querySelectorAll('.video-layer').forEach(v => {
+        v.muted = shouldMute;
+        if (!shouldMute) v.volume = state.volume;
+      });
+    });
+    updateMuteButtons();
   }
 
   // 全体音声の ON/OFF を設定する
   function setAudioState(on) {
     state.isAudioOn = on;
-    videoGrid.querySelectorAll('.video-cell').forEach(cell => {
-      cell.dataset.muted = on ? "false" : "true";
-      cell.querySelectorAll('.video-layer').forEach(v => {
-        v.muted = !on;
-        if (on) v.volume = state.volume;
-      });
-    });
+    state.soloCellIndex = null; // 全体切り替え時はソロ解除
+    syncAudio();
+
     if (on) {
       audioOffIcon.style.display = 'none';
       audioOnIcon.style.display = 'block';
@@ -1214,12 +1247,9 @@
     state.volume = parseFloat(volumeSlider.value);
     if (!state.isAudioOn) {
       setAudioState(true); // 音量を動かしたら自動でON
+    } else {
+      syncAudio(); // 現在のミュート状態を維持しつつ音量だけ更新
     }
-    videoGrid.querySelectorAll('.video-layer').forEach(v => {
-      if (!v.muted) {
-        v.volume = state.volume;
-      }
-    });
     updateVolumeSliderBackground();
   });
 

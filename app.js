@@ -658,7 +658,14 @@
       audioToggleBtn.classList.add('audio-off');
       audioToggleBtn.classList.remove('audio-on');
     }
-    updateMuteButtons();
+    updateVolumeSliderBackground();
+  }
+
+  function updateVolumeSliderBackground() {
+    if (!volumeSlider) return;
+    const val = (volumeSlider.value - volumeSlider.min) / (volumeSlider.max - volumeSlider.min) * 100;
+    // 水平スライダーを-90度回転させているため、to right が見た目上の「下から上」になる
+    volumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${val}%, rgba(255, 255, 255, 0.1) ${val}%)`;
   }
 
   // ===== Scene Assignment =====
@@ -1098,6 +1105,7 @@
     o.classList.toggle('active', parseInt(o.dataset.value, 10) === state.gridCount);
   });
   updateGridUI();
+  updateVolumeSliderBackground();
 
   intervalInput.addEventListener('change', () => {
     state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));
@@ -1201,6 +1209,7 @@
         v.volume = state.volume;
       }
     });
+    updateVolumeSliderBackground();
   });
 
   // Keyboard shortcuts

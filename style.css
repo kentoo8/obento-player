@@ -442,7 +442,7 @@ body.focus-mode header:hover {
   color: var(--text-primary);
 }
 
-/* Volume Control with Hover Slider */
+/* Volume Control with Hover Slider - Expand Downwards */
 .volume-control-group {
   position: relative;
   display: flex;
@@ -452,12 +452,13 @@ body.focus-mode header:hover {
 
 .volume-slider-container {
   position: absolute;
-  bottom: calc(100% + 12px);
+  top: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: var(--bg-secondary);
+  transform: translateX(-50%) translateY(-10px);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  padding: 16px 10px;
+  width: 32px;
+  height: 100px;
   border-radius: 20px;
   opacity: 0;
   visibility: hidden;
@@ -465,16 +466,19 @@ body.focus-mode header:hover {
   backdrop-filter: blur(12px);
   box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .volume-slider-container::after {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--border-color);
+  border-bottom-color: var(--border-color);
 }
 
 .volume-control-group:hover .volume-slider-container {
@@ -484,13 +488,17 @@ body.focus-mode header:hover {
 }
 
 #volumeSlider {
-  -webkit-appearance: slider-vertical;
-  width: 4px;
-  height: 80px;
-  background: var(--border-color);
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 80px; /* 回転後の高さ */
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
+  transform: rotate(-90deg);
+  margin: 0;
 }
 
 #volumeSlider::-webkit-slider-thumb {
@@ -499,7 +507,14 @@ body.focus-mode header:hover {
   height: 14px;
   border-radius: 50%;
   background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 10px var(--accent-glow);
+  border: 2px solid white;
+  transition: transform var(--transition-fast);
+  cursor: pointer;
+}
+
+#volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
 }
 
 /* ===== Buttons ===== */

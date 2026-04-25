@@ -381,25 +381,116 @@ body.focus-mode header:hover {
   bottom: 0;
 }
 
-/* Volume button wrapper + vertical popup */
-.volume-btn-wrapper {
+/* ===== Playback Controls (Unified Circle Design) ===== */
+.playback-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 6px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 8px;
+}
+
+.circle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  padding: 0;
+  outline: none;
+}
+
+.circle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+.play-btn-main {
+  width: 42px;
+  height: 42px;
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.play-btn-main:hover {
+  background: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+  transform: scale(1.08);
+}
+
+.speed-btn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.speed-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Volume Control with Hover Slider */
+.volume-control-group {
   position: relative;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
-/* Volume slider - vertical stack */
+.volume-slider-container {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 16px 10px;
+  border-radius: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index: 100;
+}
+
+.volume-slider-container::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--border-color);
+}
+
+.volume-control-group:hover .volume-slider-container {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 #volumeSlider {
-  -webkit-appearance: none;
-  appearance: none;
+  -webkit-appearance: slider-vertical;
   width: 4px;
-  height: 60px;
+  height: 80px;
   background: var(--border-color);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
-  writing-mode: bt-lr; /* Bottom to top */
-  -webkit-appearance: slider-vertical;
 }
 
 #volumeSlider::-webkit-slider-thumb {
@@ -408,13 +499,7 @@ body.focus-mode header:hover {
   height: 14px;
   border-radius: 50%;
   background: var(--accent-primary);
-  cursor: pointer;
   box-shadow: 0 0 8px var(--accent-glow);
-  transition: transform var(--transition-fast);
-}
-
-#volumeSlider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
 }
 
 /* ===== Buttons ===== */
@@ -447,16 +532,6 @@ body.focus-mode header:hover {
   background: var(--accent-secondary);
   border-color: var(--accent-secondary);
   box-shadow: 0 0 20px var(--accent-glow);
-}
-
-#playAllBtn {
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%; /* Circle for play button makes it stand out without being bulky */
 }
 
 #playIcon {

@@ -49,12 +49,11 @@
     <!-- グループ1・2を中央寄せでまとめる -->
     <div class="header-center">
       <div class="header-group">
-        <div class="control-group">
+        <div class="playback-group">
+          <!-- Speed -->
           <div id="speedDropdown" class="grid-dropdown">
-            <button id="speedDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="再生速度">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
-              <span id="speedLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 600;">1.0x</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
+            <button id="speedDropdownBtn" class="circle-btn speed-btn" title="再生速度">
+              <span id="speedLabel">1.0x</span>
             </button>
             <div id="speedDropdownContent" class="grid-dropdown-content">
               <div class="grid-dropdown-option" data-value="0.5"><span>0.5x</span></div>
@@ -66,28 +65,34 @@
               <div class="grid-dropdown-option" data-value="3.0"><span>3.0x</span></div>
             </div>
           </div>
-        </div>
-        <button id="playAllBtn" class="btn btn-primary" title="全て再生 / 一時停止">
-          <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-          <svg id="pauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-            <rect x="6" y="4" width="4" height="16"/>
-            <rect x="14" y="4" width="4" height="16"/>
-          </svg>
-        </button>
-        <div class="control-group">
-          <button id="audioToggleBtn" class="btn btn-secondary audio-off icon-only" title="音声 ON/OFF">
-            <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+
+          <!-- Play/Pause -->
+          <button id="playAllBtn" class="circle-btn play-btn-main" title="全て再生 / 一時停止">
+            <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 19,12 5,21"/>
             </svg>
-            <svg id="audioOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/>
+            <svg id="pauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
             </svg>
           </button>
-          <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8">
+
+          <!-- Volume -->
+          <div class="volume-control-group">
+            <div class="volume-slider-container">
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8">
+            </div>
+            <button id="audioToggleBtn" class="circle-btn volume-btn audio-off" title="音声 ON/OFF">
+              <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+              </svg>
+              <svg id="audioOnIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>

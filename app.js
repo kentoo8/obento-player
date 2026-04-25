@@ -64,6 +64,7 @@
 
   const moreMenu = $('#moreMenu');
   const moreMenuBtn = $('#moreMenuBtn');
+  const theaterModeBtn = $('#theaterModeBtn');
 
   // ===== Video File Management =====
 
@@ -1090,6 +1091,11 @@
     gridDropdown.classList.remove('open');
     speedDropdown.classList.remove('open');
     moreMenu.classList.toggle('open');
+  });
+
+  theaterModeBtn.addEventListener('click', () => {
+    document.body.classList.add('focus-mode');
+    moreMenu.classList.remove('open');
   });
 
   // Close dropdowns when clicking outside

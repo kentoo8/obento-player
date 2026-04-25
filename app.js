@@ -328,6 +328,7 @@
       </div>
       <div class="video-cell-controls-panel">
         <div class="inline-seek-controls">
+          <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
           <button class="small-seek-btn cell-pin-btn" title="ピン留め (自動切替を停止)">${pinIconSVG()}</button>
           <button class="small-seek-btn cell-mute-btn" title="個別にミュート/解除">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
           <button class="small-seek-btn prev-vid-btn" title="前の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg></button>
@@ -473,6 +474,53 @@
         });
       }
     });
+
+    // Focus toggle
+    const focusBtn = overlay.querySelector('.cell-focus-btn');
+    focusBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isFocused = cell.classList.contains('focused');
+      if (isFocused) {
+        // Unfocus
+        cell.classList.remove('focused');
+        focusBtn.innerHTML = focusIconSVG();
+        videoGrid.querySelectorAll('.video-cell').forEach(c => {
+          if (c !== cell) {
+            c.style.display = '';
+            const activeLayer = c.querySelector('.video-layer.active');
+            if (activeLayer && state.isPlaying && !c.dataset.wasPausedByFocus) {
+              activeLayer.play().catch(()=>{});
+            }
+            if (state.isPlaying) {
+              scheduleCellSwitch(c, true);
+            }
+          }
+        });
+      } else {
+        // Focus this cell
+        cell.classList.add('focused');
+        focusBtn.innerHTML = unfocusIconSVG();
+        videoGrid.querySelectorAll('.video-cell').forEach(c => {
+          if (c !== cell) {
+            c.style.display = 'none';
+            const activeLayer = c.querySelector('.video-layer.active');
+            if (activeLayer) {
+              c.dataset.wasPausedByFocus = activeLayer.paused ? "true" : "";
+              activeLayer.pause();
+            }
+            if (c._switchTimer) {
+              clearTimeout(c._switchTimer);
+              c._switchTimer = null;
+            }
+          }
+        });
+        const activeLayer = cell.querySelector('.video-layer.active');
+        if (activeLayer && activeLayer.paused && state.isPlaying) {
+            activeLayer.play().catch(()=>{});
+        }
+      }
+    });
+
     return cell;
   }
 
@@ -503,6 +551,14 @@
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
     </svg>`;
+  }
+
+  function focusIconSVG() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`;
+  }
+
+  function unfocusIconSVG() {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="10" y1="14" x2="3" y2="21"></line><line x1="21" y1="3" x2="14" y2="10"></line></svg>`;
   }
 
   const gridLayouts = [1, 2, 4, 6, 8, 9];

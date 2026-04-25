@@ -420,16 +420,17 @@ body.focus-mode header:hover {
 .play-btn-main {
   width: 42px;
   height: 42px;
-  background: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
-  box-shadow: 0 4px 20px var(--accent-glow);
+  background: white;
+  color: var(--bg-card);
+  border-color: white;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
 }
 
 .play-btn-main:hover {
-  background: var(--accent-secondary);
-  border-color: var(--accent-secondary);
+  background: #f0f0f5;
+  border-color: #f0f0f5;
   transform: scale(1.08);
+  box-shadow: 0 4px 25px rgba(255, 255, 255, 0.4);
 }
 
 .speed-btn {

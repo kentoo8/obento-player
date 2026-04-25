@@ -128,6 +128,15 @@ body.is-app-empty header {
   pointer-events: auto;
 }
 
+/* フォーカスモード中はホバーしてもバーを表示しない */
+body.focus-mode header,
+body.focus-mode header:hover {
+  opacity: 0 !important;
+  transform: translateY(-100%) !important;
+  pointer-events: none !important;
+}
+
+
 
 .header-left, .header-right {
   display: flex;
@@ -542,7 +551,7 @@ body.focus-mode .empty-state {
   content: '';
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 25vh;
+  height: 50vh;
   z-index: -1;
 }
 

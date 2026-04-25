@@ -1150,6 +1150,22 @@
         }
         break;
 
+      case 'KeyF':
+        if (document.body.classList.contains('focus-mode')) {
+          const focusedCell = document.querySelector('.video-cell.focused');
+          if (focusedCell) {
+            const btn = focusedCell.querySelector('.cell-focus-btn');
+            if (btn) btn.click();
+          }
+        } else {
+          const hoveredCell = document.querySelector('.video-cell:hover');
+          if (hoveredCell) {
+            const btn = hoveredCell.querySelector('.cell-focus-btn');
+            if (btn) btn.click();
+          }
+        }
+        break;
+
       case 'Escape':
         if (document.body.classList.contains('focus-mode')) {
           const focusedCell = document.querySelector('.video-cell.focused');

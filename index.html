@@ -48,47 +48,6 @@
 
     <!-- グループ1・2を中央寄せでまとめる -->
     <div class="header-center">
-      <!-- グループ1: レイアウト -->
-      <div class="header-group">
-        <div class="control-group">
-          <div id="gridDropdown" class="grid-dropdown">
-            <button id="gridDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="レイアウト切り替え">
-              <span id="gridIconContainer"></span>
-              <span id="gridCountLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 500;">4</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-            <div id="gridDropdownContent" class="grid-dropdown-content">
-              <div class="grid-dropdown-option" data-value="1" title="1 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor"/></svg>
-                <span>1 画面</span>
-              </div>
-              <div class="grid-dropdown-option" data-value="2" title="2 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="18" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="18" rx="1" fill="currentColor"/></svg>
-                <span>2 画面</span>
-              </div>
-              <div class="grid-dropdown-option active" data-value="4" title="4 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/></svg>
-                <span>4 画面</span>
-              </div>
-              <div class="grid-dropdown-option" data-value="6" title="6 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/></svg>
-                <span>6 画面</span>
-              </div>
-              <div class="grid-dropdown-option" data-value="8" title="8 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="3" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/></svg>
-                <span>8 画面</span>
-              </div>
-              <div class="grid-dropdown-option" data-value="9" title="9 画面">
-                <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="0.5" fill="currentColor"/></svg>
-                <span>9 画面</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="header-sep"></div>
-
       <div class="header-group">
         <div class="control-group">
           <div id="speedDropdown" class="grid-dropdown">
@@ -135,6 +94,41 @@
 
     <!-- 右端: その他メニュー -->
     <div class="header-right">
+      <div class="control-group">
+        <div id="gridDropdown" class="grid-dropdown">
+          <button id="gridDropdownBtn" class="btn btn-secondary grid-dropdown-trigger" title="レイアウト切り替え">
+            <span id="gridIconContainer"></span>
+            <span id="gridCountLabel" style="font-size: 0.75rem; margin-left: 4px; font-weight: 500;">4</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-left: 6px; opacity: 0.6;"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="gridDropdownContent" class="grid-dropdown-content">
+            <div class="grid-dropdown-option" data-value="1" title="1 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor"/></svg>
+              <span>1 画面</span>
+            </div>
+            <div class="grid-dropdown-option" data-value="2" title="2 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="18" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="18" rx="1" fill="currentColor"/></svg>
+              <span>2 画面</span>
+            </div>
+            <div class="grid-dropdown-option active" data-value="4" title="4 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="3" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/><rect x="12.5" y="12.5" width="8.5" height="8.5" rx="1" fill="currentColor"/></svg>
+              <span>4 画面</span>
+            </div>
+            <div class="grid-dropdown-option" data-value="6" title="6 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="3" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="3" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="9.5" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/><rect x="16" y="12.5" width="5.5" height="8.5" rx="1" fill="currentColor"/></svg>
+              <span>6 画面</span>
+            </div>
+            <div class="grid-dropdown-option" data-value="8" title="8 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="3" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="3" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="8" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="13" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/><rect x="18" y="12.5" width="4" height="8.5" rx="0.5" fill="currentColor"/></svg>
+              <span>8 画面</span>
+            </div>
+            <div class="grid-dropdown-option" data-value="9" title="9 画面">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="3" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="9.5" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="3" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="9.5" y="16" width="5" height="5" rx="0.5" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="0.5" fill="currentColor"/></svg>
+              <span>9 画面</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="moreMenu" class="grid-dropdown">
         <button id="moreMenuBtn" class="btn btn-secondary icon-only" title="詳細メニュー">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

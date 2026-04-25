@@ -376,7 +376,7 @@ body.focus-mode header:hover {
   width: 28px;
 }
 
-#moreMenu .grid-dropdown-content {
+.header-right .grid-dropdown-content {
   top: auto;
   bottom: 0;
 }

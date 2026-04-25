@@ -502,7 +502,14 @@
         cells.forEach(c => {
           const layer = c.querySelector('.video-layer.active');
           if (layer && layer._segKey && parseInt(layer._segKey.split(':')[0], 10) === vi) {
-            assignRandomSceneToCell(c);
+            // アニメーション適用
+            c.classList.remove('exclude-anim');
+            void c.offsetWidth; // trigger reflow
+            c.classList.add('exclude-anim');
+            setTimeout(() => c.classList.remove('exclude-anim'), 400);
+
+            // 除外時は即時切り替え
+            assignRandomSceneToCell(c, true);
           }
         });
       }
@@ -711,7 +718,7 @@
   }
 
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
-  function assignRandomSceneToCell(cell) {
+  function assignRandomSceneToCell(cell, immediate = false) {
     if (state.videoFiles.length === 0) return;
     if (state.segmentPool.length === 0) buildSegmentPool();
 
@@ -736,11 +743,11 @@
     });
 
     const seg = popSegment(activeKeys, activeSegments);
-    applySegmentToCell(cell, seg);
+    applySegmentToCell(cell, seg, true, immediate);
     scheduleCellSwitch(cell, false);
   }
 
-  function applySegmentToCell(cell, seg, storeInHistory = true) {
+  function applySegmentToCell(cell, seg, storeInHistory = true, immediate = false) {
     if (storeInHistory) {
       if (cell._historyIndex < cell._history.length - 1) {
         cell._history = cell._history.slice(0, cell._historyIndex + 1);
@@ -791,16 +798,35 @@
         nextLayer.play().catch(() => {});
       }
       
+      if (immediate) cell.classList.add('immediate-switch');
+
       // クロスフェード実行
       if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
       if (cell._updatePlayPauseIcon) cell._updatePlayPauseIcon();
       
       if (activeLayer) {
-        setTimeout(() => {
+        if (immediate) {
           activeLayer.pause();
           activeLayer._segKey = null; // キー解放
-        }, 800); // 0.8s は CSS transition と合わせる
+          // transitionを無効化するクラスを外す
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              cell.classList.remove('immediate-switch');
+            });
+          });
+        } else {
+          setTimeout(() => {
+            activeLayer.pause();
+            activeLayer._segKey = null; // キー解放
+          }, 800); // 0.8s は CSS transition と合わせる
+        }
+      } else if (immediate) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            cell.classList.remove('immediate-switch');
+          });
+        });
       }
     }
 

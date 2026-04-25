@@ -1237,16 +1237,6 @@
           }
         }
         break;
-      case 'KeyM':
-        {
-          const hoveredCellM = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
-          if (hoveredCellM) {
-            e.preventDefault();
-            const muteBtn = hoveredCellM.querySelector('.cell-mute-btn');
-            if (muteBtn) muteBtn.click();
-          }
-        }
-        break;
       case 'BracketLeft': // Fallthrough to support physical location on US keyboards
       case 'BracketRight': // Fallthrough
       default:

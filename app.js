@@ -952,30 +952,36 @@
     
     if (e.dataTransfer.items) {
       const items = Array.from(e.dataTransfer.items);
-      for (const item of items) {
-        if (item.kind === 'file') {
-          // 現代のAPI (file://環境でもフォルダのドロップが動作する可能性が高い)
-          if (item.getAsFileSystemHandle) {
-            try {
-              const handle = await item.getAsFileSystemHandle();
-              if (handle) {
-                await traverseFileSystemHandle(handle, files);
-                continue;
-              }
-            } catch (err) {
-              console.warn('FileSystemHandle error:', err);
-              // エラーが起きてもフォールバックに処理を回す
+      // await する前に、同期的に全ての項目から必要な情報（ハンドル、エントリー、ファイルオブジェクト）を取得しておく。
+      // こうしないと、最初の await で DataTransfer がクリアされ、2つ目以降の項目にアクセスできなくなる。
+      const itemData = items.map(item => {
+        if (item.kind !== 'file') return null;
+        return {
+          handlePromise: item.getAsFileSystemHandle ? item.getAsFileSystemHandle() : null,
+          entry: item.webkitGetAsEntry ? item.webkitGetAsEntry() : null,
+          file: item.getAsFile()
+        };
+      }).filter(Boolean);
+
+      for (const data of itemData) {
+        // 現代のAPI (file://環境でもフォルダのドロップが動作する可能性が高い)
+        if (data.handlePromise) {
+          try {
+            const handle = await data.handlePromise;
+            if (handle) {
+              await traverseFileSystemHandle(handle, files);
+              continue;
             }
+          } catch (err) {
+            console.warn('FileSystemHandle error:', err);
           }
-          
-          // フォールバック (webkitGetAsEntry)
-          const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
-          if (entry && entry.isDirectory) {
-            await traverseFileTree(entry, files);
-          } else {
-            const file = item.getAsFile();
-            if (file) files.push(file);
-          }
+        }
+        
+        // フォールバック (webkitGetAsEntry)
+        if (data.entry && data.entry.isDirectory) {
+          await traverseFileTree(data.entry, files);
+        } else if (data.file) {
+          files.push(data.file);
         }
       }
     } else if (e.dataTransfer.files) {

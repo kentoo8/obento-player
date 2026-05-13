@@ -28,6 +28,114 @@
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
 
+  // ===== Audio Management =====
+  const AUTO_LEVEL_TARGET_RMS = 0.12;
+  const AUTO_LEVEL_MIN_GAIN = 0.18;
+  const AUTO_LEVEL_SILENCE_RMS = 0.01;
+  let audioCtx = null;
+  let autoLevelFrameId = null;
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function effectiveGainForVideo(video, shouldMute) {
+    if (shouldMute) return 0;
+    const autoGain = video._autoGain === undefined ? 1 : video._autoGain;
+    return state.volume * autoGain;
+  }
+
+  function applyAudioState(video, shouldMute) {
+    video.muted = shouldMute;
+    if (video._gainNode) {
+      video._gainNode.gain.value = effectiveGainForVideo(video, shouldMute);
+    } else {
+      video.volume = Math.min(1, Math.max(0, state.volume));
+    }
+  }
+
+  function resumeAudioContext() {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+  }
+
+  function initWebAudioForVideo(video) {
+    if (video._audioSetup) return;
+    try {
+      const ctx = getAudioContext();
+      const source = ctx.createMediaElementSource(video);
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 8;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.5;
+
+      const gainNode = ctx.createGain();
+      source.connect(compressor);
+      compressor.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      video._analyser = analyser;
+      video._levelBuffer = new Uint8Array(analyser.fftSize);
+      video._gainNode = gainNode;
+      video._autoGain = 1;
+      video._audioSetup = true;
+      applyAudioState(video, video.muted);
+      startAutoLeveling();
+    } catch(err) {
+      console.warn("Web Audio API init failed", err);
+    }
+  }
+
+  function measureRms(video) {
+    if (!video._analyser || !video._levelBuffer) return 0;
+
+    video._analyser.getByteTimeDomainData(video._levelBuffer);
+
+    let sum = 0;
+    for (let i = 0; i < video._levelBuffer.length; i++) {
+      const centered = (video._levelBuffer[i] - 128) / 128;
+      sum += centered * centered;
+    }
+    return Math.sqrt(sum / video._levelBuffer.length);
+  }
+
+  function updateAutoGain(video) {
+    const rms = measureRms(video);
+    const targetGain = rms < AUTO_LEVEL_SILENCE_RMS
+      ? 1
+      : Math.min(1, Math.max(AUTO_LEVEL_MIN_GAIN, AUTO_LEVEL_TARGET_RMS / rms));
+    const currentGain = video._autoGain === undefined ? 1 : video._autoGain;
+    const smoothing = targetGain < currentGain ? 0.35 : 0.04;
+
+    video._autoGain = currentGain + (targetGain - currentGain) * smoothing;
+    applyAudioState(video, video.muted);
+  }
+
+  function startAutoLeveling() {
+    if (autoLevelFrameId) return;
+
+    const tick = () => {
+      videoGrid.querySelectorAll('.video-layer.active').forEach(video => {
+        if (!video.muted && !video.paused && video._audioSetup) {
+          updateAutoGain(video);
+        }
+      });
+      autoLevelFrameId = requestAnimationFrame(tick);
+    };
+
+    autoLevelFrameId = requestAnimationFrame(tick);
+  }
+
   // ===== DOM Refs =====
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
@@ -48,6 +156,7 @@
   const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
   const speedLabel = $('#speedLabel');
   const volumeSlider = $('#volumeSlider');
+  const volumeTooltip = $('#volumeTooltip');
   const appLogo = $('#appLogo');
   const autoRotateBtn = $('#autoRotateBtn');
   const playAllBtn = $('#playAllBtn');
@@ -301,12 +410,13 @@
         shouldMute = (state.soloCellIndex !== cellIndex);
       }
       
-      video.muted = shouldMute;
       video.loop = false;
       video.playsInline = true;
       video.preload = 'auto';
-      video.volume = state.volume;
+      applyAudioState(video, shouldMute);
       cell.appendChild(video);
+
+      video.addEventListener('play', () => initWebAudioForVideo(video), { once: true });
 
       video.addEventListener('timeupdate', () => {
         if (!video.classList.contains('active')) return;
@@ -475,6 +585,8 @@
         state.soloCellIndex = null; // Solo OFF
       } else {
         state.soloCellIndex = cellIndex; // Solo this cell
+        resumeAudioContext();
+        startAutoLeveling();
         if (!state.isAudioOn) {
           // ソロにした時は全体設定がOFFでも音が出るように、内部的にはON扱いにするか検討
           // ユーザーの意図としては「この音を出したい」なので、全体をONにする
@@ -668,8 +780,7 @@
       
       cell.dataset.muted = shouldMute ? "true" : "false";
       cell.querySelectorAll('.video-layer').forEach(v => {
-        v.muted = shouldMute;
-        if (!shouldMute) v.volume = state.volume;
+        applyAudioState(v, shouldMute);
       });
     });
     updateMuteButtons();
@@ -679,6 +790,10 @@
   function setAudioState(on) {
     state.isAudioOn = on;
     state.soloCellIndex = null; // 全体切り替え時はソロ解除
+    if (on) {
+      resumeAudioContext();
+      startAutoLeveling();
+    }
     syncAudio();
 
     if (on) {
@@ -695,11 +810,21 @@
     updateVolumeSliderBackground();
   }
 
-  function updateVolumeSliderBackground() {
+  let volumeTooltipTimeout;
+  function updateVolumeSliderBackground(showTooltip = false) {
     if (!volumeSlider) return;
     const val = (volumeSlider.value - volumeSlider.min) / (volumeSlider.max - volumeSlider.min) * 100;
     // 水平スライダーを-90度回転させているため、to right が見た目上の「下から上」になる
     volumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${val}%, rgba(255, 255, 255, 0.1) ${val}%)`;
+    
+    if (showTooltip && volumeTooltip) {
+      volumeTooltip.textContent = Math.round(state.volume * 100) + '%';
+      volumeTooltip.classList.add('show');
+      clearTimeout(volumeTooltipTimeout);
+      volumeTooltipTimeout = setTimeout(() => {
+        volumeTooltip.classList.remove('show');
+      }, 1000);
+    }
   }
 
   // ===== Scene Assignment =====
@@ -812,6 +937,8 @@
     nextLayer._vi = seg.videoIndex; // Store index for later reference (e.g. rotate toggle)
     nextLayer._fileName = chosen.file.name;
     nextLayer._segKey = seg.key; // 重複チェック用
+    nextLayer._autoGain = 1;
+    applyAudioState(nextLayer, nextLayer.muted);
 
     function seekAndPlay() {
       nextLayer.removeEventListener('loadedmetadata', seekAndPlay);
@@ -1256,7 +1383,7 @@
     } else {
       syncAudio(); // 現在のミュート状態を維持しつつ音量だけ更新
     }
-    updateVolumeSliderBackground();
+    updateVolumeSliderBackground(true);
   });
 
   // Keyboard shortcuts
@@ -1323,19 +1450,21 @@
         break;
       case 'ArrowUp':
         e.preventDefault();
-        state.volume = Math.min(1, state.volume + 0.05);
+        state.volume = Math.min(2, state.volume + 0.05);
         volumeSlider.value = state.volume;
         videoGrid.querySelectorAll('.video-layer').forEach(v => {
-          if (!v.muted) v.volume = state.volume;
+          applyAudioState(v, v.muted);
         });
+        updateVolumeSliderBackground(true);
         break;
       case 'ArrowDown':
         e.preventDefault();
         state.volume = Math.max(0, state.volume - 0.05);
         volumeSlider.value = state.volume;
         videoGrid.querySelectorAll('.video-layer').forEach(v => {
-          if (!v.muted) v.volume = state.volume;
+          applyAudioState(v, v.muted);
         });
+        updateVolumeSliderBackground(true);
         break;
       case 'ArrowLeft':
         {
@@ -1491,4 +1620,3 @@
 
   initCustomTooltips();
 })();
-

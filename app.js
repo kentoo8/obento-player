@@ -155,6 +155,7 @@
   const speedDropdownBtn = $('#speedDropdownBtn');
   const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
   const speedLabel = $('#speedLabel');
+  const speedToast = $('#speedToast');
   const volumeSlider = $('#volumeSlider');
   const volumeTooltip = $('#volumeTooltip');
   const appLogo = $('#appLogo');
@@ -228,6 +229,7 @@
     if (!videoFile || !width || !height) return;
 
     videoFile.isPortrait = height > width;
+    applyRotationToVideo(index);
   }
 
   function enqueuePreload(index) {
@@ -779,6 +781,14 @@
     }
   }
 
+  function applyRotationToVideo(videoIndex) {
+    videoGrid.querySelectorAll('.video-layer').forEach(layer => {
+      if (layer._vi === videoIndex) {
+        applyRotationToLayer(layer);
+      }
+    });
+  }
+
   function updateAutoRotateButton() {
     state.isAutoRotateOn = state.autoRotateDegree !== 0;
     autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
@@ -789,6 +799,18 @@
     if (label) {
       label.textContent = `縦動画を回転: ${state.autoRotateDegree}°`;
     }
+  }
+
+  let speedToastTimeout;
+  function showSpeedToast(speed) {
+    if (!speedToast) return;
+
+    speedToast.textContent = `${speed}x`;
+    speedToast.classList.add('show');
+    clearTimeout(speedToastTimeout);
+    speedToastTimeout = setTimeout(() => {
+      speedToast.classList.remove('show');
+    }, 900);
   }
 
   function updateMuteButtons() {
@@ -1276,6 +1298,7 @@
       speedDropdownOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       speedLabel.textContent = val + 'x';
+      showSpeedToast(val);
       
       // Apply to all active videos
       videoGrid.querySelectorAll('video').forEach(v => {

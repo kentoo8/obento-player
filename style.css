@@ -639,7 +639,36 @@ body.focus-mode .empty-state {
   top: 0;
 }
 
+.speed-toast {
+  position: fixed;
+  top: 16px;
+  left: calc(var(--sidebar-width) + 16px);
+  z-index: 120;
+  min-width: 56px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 8, 12, 0.78);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
 
+.speed-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.focus-mode .speed-toast {
+  left: 16px;
+}
 
 .grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }

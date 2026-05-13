@@ -23,7 +23,7 @@
     activePreloads: 0,
     playbackSpeed: 1.0,
     isAutoRotateOn: false,
-    autoRotateDegree: 270,
+    autoRotateDegree: 0,
     blacklistedVideos: new Set(),
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
@@ -179,6 +179,7 @@
   // ===== Video File Management =====
 
   const VIDEO_EXTS = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
+  const ROTATE_MODES = [0, 90, 270];
 
   function addVideoFiles(files) {
     const unsupported = [];
@@ -222,6 +223,13 @@
   // ===== Metadata Preload Queue =====
   const MAX_CONCURRENT_PRELOADS = 3;
 
+  function updateVideoOrientation(index, width, height) {
+    const videoFile = state.videoFiles[index];
+    if (!videoFile || !width || !height) return;
+
+    videoFile.isPortrait = height > width;
+  }
+
   function enqueuePreload(index) {
     state.preloadQueue.push(index);
     processPreloadQueue();
@@ -247,8 +255,7 @@
       
       tmp.onloadedmetadata = () => {
         state.videoDurations[index] = tmp.duration;
-        // 縦長判定 (高さ > 幅)
-        state.videoFiles[index].isPortrait = tmp.videoHeight > tmp.videoWidth;
+        updateVideoOrientation(index, tmp.videoWidth, tmp.videoHeight);
         tmp.src = '';
         resolve();
       };
@@ -754,6 +761,36 @@
     gridCountLabel.textContent = state.gridCount;
   }
 
+  function rotationDegreeForVideo(videoIndex) {
+    if (state.autoRotateDegree === 0) return 0;
+    const videoFile = state.videoFiles[videoIndex];
+    return videoFile && videoFile.isPortrait ? state.autoRotateDegree : 0;
+  }
+
+  function applyRotationToLayer(layer) {
+    layer.classList.remove('rotated-270', 'rotated-90');
+
+    const videoIndex = layer._vi;
+    if (videoIndex === undefined) return;
+
+    const degree = rotationDegreeForVideo(videoIndex);
+    if (degree !== 0) {
+      layer.classList.add(`rotated-${degree}`);
+    }
+  }
+
+  function updateAutoRotateButton() {
+    state.isAutoRotateOn = state.autoRotateDegree !== 0;
+    autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
+    autoRotateBtn.classList.toggle('is-90', state.autoRotateDegree === 90);
+    autoRotateBtn.title = `縦動画の回転: ${state.autoRotateDegree}度`;
+
+    const label = autoRotateBtn.querySelector('span');
+    if (label) {
+      label.textContent = `縦動画を回転: ${state.autoRotateDegree}°`;
+    }
+  }
+
   function updateMuteButtons() {
     const cells = videoGrid.querySelectorAll('.video-cell');
     cells.forEach(cell => {
@@ -958,14 +995,8 @@
         nextLayer.currentTime = targetTime;
       }
       nextLayer.playbackRate = state.playbackSpeed;
-      
-      // Auto-rotate if portrait and option is ON
-      if (state.isAutoRotateOn && chosen.isPortrait) {
-        nextLayer.classList.remove('rotated-270', 'rotated-90');
-        nextLayer.classList.add(`rotated-${state.autoRotateDegree}`);
-      } else {
-        nextLayer.classList.remove('rotated-270', 'rotated-90');
-      }
+      updateVideoOrientation(seg.videoIndex, nextLayer.videoWidth, nextLayer.videoHeight);
+      applyRotationToLayer(nextLayer);
 
       if (state.isPlaying) {
         nextLayer.play().catch(() => {});
@@ -1282,6 +1313,7 @@
     o.classList.toggle('active', parseInt(o.dataset.value, 10) === state.gridCount);
   });
   updateGridUI();
+  updateAutoRotateButton();
   updateVolumeSliderBackground();
 
   intervalInput.addEventListener('change', () => {
@@ -1344,28 +1376,20 @@
     }
   });
 
-  // Auto Rotate toggle
+  // Auto Rotate mode
   autoRotateBtn.addEventListener('click', (e) => {
-    state.isAutoRotateOn = !state.isAutoRotateOn;
-    
-    if (state.isAutoRotateOn) {
-      state.autoRotateDegree = e.altKey ? 90 : 270;
-    }
+    const currentIndex = ROTATE_MODES.indexOf(state.autoRotateDegree);
+    const direction = e.altKey ? -1 : 1;
+    const nextIndex = (currentIndex + direction + ROTATE_MODES.length) % ROTATE_MODES.length;
+    state.autoRotateDegree = ROTATE_MODES[nextIndex];
 
-    autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
-    autoRotateBtn.classList.toggle('is-90', state.isAutoRotateOn && state.autoRotateDegree === 90);
+    updateAutoRotateButton();
     
     // Apply to all active video layers immediately
     videoGrid.querySelectorAll('.video-cell').forEach(cell => {
       const activeLayer = cell.querySelector('.video-layer.active');
       if (activeLayer) {
-        const vi = activeLayer._vi; 
-        if (vi !== undefined && state.videoFiles[vi].isPortrait) {
-          activeLayer.classList.remove('rotated-270', 'rotated-90');
-          if (state.isAutoRotateOn) {
-            activeLayer.classList.add(`rotated-${state.autoRotateDegree}`);
-          }
-        }
+        applyRotationToLayer(activeLayer);
       }
     });
   });

@@ -802,15 +802,23 @@
   }
 
   let speedToastTimeout;
-  function showSpeedToast(speed) {
+  function showFeedbackToast(text) {
     if (!speedToast) return;
 
-    speedToast.textContent = `${speed}x`;
+    speedToast.textContent = text;
     speedToast.classList.add('show');
     clearTimeout(speedToastTimeout);
     speedToastTimeout = setTimeout(() => {
       speedToast.classList.remove('show');
     }, 900);
+  }
+
+  function showSpeedToast(speed) {
+    showFeedbackToast(`${speed}x`);
+  }
+
+  function showVolumeToast() {
+    showFeedbackToast(Math.round(state.volume * 100) + '%');
   }
 
   function updateMuteButtons() {
@@ -1431,6 +1439,7 @@
       syncAudio(); // 現在のミュート状態を維持しつつ音量だけ更新
     }
     updateVolumeSliderBackground(true);
+    showVolumeToast();
   });
 
   // Keyboard shortcuts
@@ -1503,6 +1512,7 @@
           applyAudioState(v, v.muted);
         });
         updateVolumeSliderBackground(true);
+        showVolumeToast();
         break;
       case 'ArrowDown':
         e.preventDefault();
@@ -1512,6 +1522,7 @@
           applyAudioState(v, v.muted);
         });
         updateVolumeSliderBackground(true);
+        showVolumeToast();
         break;
       case 'ArrowLeft':
         {

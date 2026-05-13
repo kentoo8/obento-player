@@ -1565,7 +1565,7 @@
       default:
         if (e.key === '[' || e.key === '［') {
           e.preventDefault();
-          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
+          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
           const curIdx = speeds.indexOf(state.playbackSpeed);
           if (curIdx > 0) {
             const nextSpeed = speeds[curIdx - 1];
@@ -1574,7 +1574,7 @@
           }
         } else if (e.key === ']' || e.key === '］') {
           e.preventDefault();
-          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0];
+          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
           const curIdx = speeds.indexOf(state.playbackSpeed);
           if (curIdx < speeds.length - 1) {
             const nextSpeed = speeds[curIdx + 1];

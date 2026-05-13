@@ -518,6 +518,43 @@ body.focus-mode header:hover {
   transform: scale(1.2);
 }
 
+.volume-marker-100 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.volume-tooltip {
+  position: absolute;
+  right: 130%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-card);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.volume-tooltip.show {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* ===== Buttons ===== */
 .btn {
   display: inline-flex;

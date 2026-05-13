@@ -80,7 +80,9 @@
           <!-- Volume (Bottom) -->
           <div class="volume-control-group">
             <div class="volume-slider-container">
-              <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8">
+              <input type="range" id="volumeSlider" min="0" max="2" step="0.05" value="0.8">
+              <div class="volume-marker-100"></div>
+              <div id="volumeTooltip" class="volume-tooltip">100%</div>
             </div>
             <button id="audioToggleBtn" class="circle-btn volume-btn audio-off" title="音声 ON/OFF">
               <svg id="audioOffIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

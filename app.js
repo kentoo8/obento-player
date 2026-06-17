@@ -7,7 +7,7 @@
   'use strict';
 
   // ===== State =====
-  const ROTATE_MODES = [0, 90, 270];
+  const ROTATE_MODES = [0, 270, 90];
 
   const savedGridCount = localStorage.getItem('mvp_gridCount');
   const savedInterval = localStorage.getItem('mvp_interval');

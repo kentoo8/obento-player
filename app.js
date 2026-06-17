@@ -159,6 +159,8 @@
   const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
   const speedLabel = $('#speedLabel');
   const speedToast = $('#speedToast');
+  const sidebarCollapseBtn = $('#sidebarCollapseBtn');
+  const focusModeReturnBtn = $('#focusModeReturnBtn');
   const volumeSlider = $('#volumeSlider');
   const volumeTooltip = $('#volumeTooltip');
   const appLogo = $('#appLogo');
@@ -1238,6 +1240,27 @@
     });
   }
 
+  function toggleFocusModeFromShortcut() {
+    if (document.body.classList.contains('focus-mode')) {
+      const focusedCell = document.querySelector('.video-cell.focused');
+      if (focusedCell) {
+        const btn = focusedCell.querySelector('.cell-focus-btn');
+        if (btn) btn.click();
+      } else {
+        document.body.classList.remove('focus-mode');
+      }
+      return;
+    }
+
+    const hoveredCell = document.querySelector('.video-cell:hover');
+    if (hoveredCell) {
+      const btn = hoveredCell.querySelector('.cell-focus-btn');
+      if (btn) btn.click();
+    } else {
+      document.body.classList.add('focus-mode');
+    }
+  }
+
   // File input
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
@@ -1328,6 +1351,17 @@
   theaterModeBtn.addEventListener('click', () => {
     document.body.classList.add('focus-mode');
     moreMenu.classList.remove('open');
+  });
+
+  sidebarCollapseBtn.addEventListener('click', () => {
+    gridDropdown.classList.remove('open');
+    speedDropdown.classList.remove('open');
+    moreMenu.classList.remove('open');
+    toggleFocusModeFromShortcut();
+  });
+
+  focusModeReturnBtn.addEventListener('click', () => {
+    toggleFocusModeFromShortcut();
   });
 
   // Close dropdowns when clicking outside
@@ -1474,23 +1508,7 @@
         break;
 
       case 'KeyF':
-        if (document.body.classList.contains('focus-mode')) {
-          const focusedCell = document.querySelector('.video-cell.focused');
-          if (focusedCell) {
-            const btn = focusedCell.querySelector('.cell-focus-btn');
-            if (btn) btn.click();
-          } else {
-            document.body.classList.remove('focus-mode');
-          }
-        } else {
-          const hoveredCell = document.querySelector('.video-cell:hover');
-          if (hoveredCell) {
-            const btn = hoveredCell.querySelector('.cell-focus-btn');
-            if (btn) btn.click();
-          } else {
-            document.body.classList.add('focus-mode');
-          }
-        }
+        toggleFocusModeFromShortcut();
         break;
 
       case 'KeyM':

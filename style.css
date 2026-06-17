@@ -119,6 +119,67 @@ body.focus-mode header:hover {
   pointer-events: none !important;
 }
 
+.sidebar-collapse-btn,
+.focus-mode-return-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.sidebar-collapse-btn {
+  width: 28px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  opacity: 0.55;
+}
+
+.sidebar-collapse-btn:hover,
+.sidebar-collapse-btn:focus-visible {
+  opacity: 1;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-color);
+  outline: none;
+}
+
+.focus-mode-return-btn {
+  position: fixed;
+  top: 10px;
+  left: 6px;
+  z-index: 2100;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: rgba(18, 18, 26, 0.76);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+  visibility: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+body.focus-mode .focus-mode-return-btn {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+body.focus-mode .focus-mode-return-btn:hover,
+body.focus-mode .focus-mode-return-btn:focus-visible {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--text-primary);
+  background: rgba(26, 26, 38, 0.9);
+  outline: none;
+}
+
 
 
 .header-left, .header-center, .header-right {

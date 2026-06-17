@@ -7,8 +7,11 @@
   'use strict';
 
   // ===== State =====
+  const ROTATE_MODES = [0, 90, 270];
+
   const savedGridCount = localStorage.getItem('mvp_gridCount');
   const savedInterval = localStorage.getItem('mvp_interval');
+  const savedAutoRotateDegree = parseInt(localStorage.getItem('mvp_autoRotateDegree'), 10);
 
   const state = {
     videoFiles: [],       // Array of { file: File, url: string }
@@ -22,8 +25,8 @@
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,
     playbackSpeed: 1.0,
-    isAutoRotateOn: false,
-    autoRotateDegree: 0,
+    isAutoRotateOn: ROTATE_MODES.includes(savedAutoRotateDegree) && savedAutoRotateDegree !== 0,
+    autoRotateDegree: ROTATE_MODES.includes(savedAutoRotateDegree) ? savedAutoRotateDegree : 0,
     blacklistedVideos: new Set(),
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
@@ -180,8 +183,6 @@
   // ===== Video File Management =====
 
   const VIDEO_EXTS = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
-  const ROTATE_MODES = [0, 90, 270];
-
   function addVideoFiles(files) {
     const unsupported = [];
     for (const file of files) {
@@ -1413,6 +1414,7 @@
     const direction = e.altKey ? -1 : 1;
     const nextIndex = (currentIndex + direction + ROTATE_MODES.length) % ROTATE_MODES.length;
     state.autoRotateDegree = ROTATE_MODES[nextIndex];
+    localStorage.setItem('mvp_autoRotateDegree', state.autoRotateDegree);
 
     updateAutoRotateButton();
     

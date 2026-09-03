@@ -6,6 +6,14 @@
 (function () {
   'use strict';
 
+  const {
+    createDeck,
+    createScenes,
+    formatTime,
+    normalizeSteppedValue,
+    shuffle,
+  } = window.ObentoCore;
+
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
 
@@ -212,7 +220,7 @@
       state.videoFiles.push({ file, url });
       state.videoDurations.push(null);
       state.videoDeck.push(idx);
-      shuffle(state.videoDeck);
+      state.videoDeck = shuffle(state.videoDeck);
       enqueuePreload(idx);
     }
     if (unsupported.length > 0) {
@@ -280,14 +288,6 @@
 
   // ===== Fair Shuffle Decks =====
 
-  function shuffle(items) {
-    for (let i = items.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [items[i], items[j]] = [items[j], items[i]];
-    }
-    return items;
-  }
-
   function eligibleVideoIndices() {
     return state.videoFiles
       .map((_, index) => index)
@@ -295,31 +295,12 @@
   }
 
   function refillVideoDeck() {
-    state.videoDeck = shuffle(eligibleVideoIndices());
-    if (state.videoDeck.length > 1 && state.videoDeck[0] === state.lastVideoIndex) {
-      [state.videoDeck[0], state.videoDeck[1]] = [state.videoDeck[1], state.videoDeck[0]];
-    }
-  }
-
-  function createScenes(videoIndex) {
-    const duration = state.videoDurations[videoIndex];
-    if (!duration || duration <= 0) {
-      return [{ videoIndex, startTime: 0, key: `${videoIndex}:0`, isUnknown: true }];
-    }
-
-    const scenes = [];
-    for (let startTime = 0; startTime < duration; startTime += state.interval) {
-      scenes.push({
-        videoIndex,
-        startTime,
-        key: `${videoIndex}:${Math.round(startTime)}`,
-      });
-    }
-    return scenes;
+    state.videoDeck = createDeck(eligibleVideoIndices(), state.lastVideoIndex);
   }
 
   function buildSceneDeck(videoIndex) {
-    const deck = shuffle(createScenes(videoIndex));
+    const scenes = createScenes(videoIndex, state.videoDurations[videoIndex], state.interval);
+    const deck = createDeck(scenes, null);
     const lastKey = state.lastSceneKeys.get(videoIndex);
     if (deck.length > 1 && deck[0].key === lastKey) {
       [deck[0], deck[1]] = [deck[1], deck[0]];
@@ -1122,13 +1103,6 @@
 
   // ===== Utility =====
 
-  function formatTime(s) {
-    if (!isFinite(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return m + ':' + String(sec).padStart(2, '0');
-  }
-
   // ===== Event Listeners =====
 
   // Drag & Drop
@@ -1402,8 +1376,7 @@
   updateVolumeSliderBackground();
 
   intervalInput.addEventListener('change', () => {
-    state.interval = Math.max(5, Math.min(300, parseInt(intervalInput.value, 10) || 10));
-    state.interval = Math.round(state.interval / 5) * 5;
+    state.interval = normalizeSteppedValue(intervalInput.value, 10, 5, 300, 5);
     intervalInput.value = state.interval;
     localStorage.setItem('mvp_interval', state.interval);
     buildShuffleDecks();

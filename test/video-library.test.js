@@ -46,3 +46,30 @@ test('resetは登録したBlob URLを解放する', () => {
   assert.deepEqual(dependencies.revoked, ['blob:test-0']);
   assert.equal(library.count(), 0);
 });
+
+test('resetは進行中のメタデータ読み込み結果を破棄する', async () => {
+  const elements = [];
+  const metadata = [];
+  const dependencies = createDependencies();
+  dependencies.createVideo = () => {
+    const video = {
+      canPlayType: () => 'maybe',
+      load: () => {},
+      removeAttribute: () => {},
+    };
+    elements.push(video);
+    return video;
+  };
+  const library = createVideoLibrary({
+    ...dependencies,
+    onMetadata: (...args) => metadata.push(args),
+  });
+  library.add([{ name: 'movie.mp4', type: 'video/mp4' }]);
+  const preloadElement = elements[1];
+
+  library.reset();
+  preloadElement.onloadedmetadata?.();
+  await Promise.resolve();
+
+  assert.deepEqual(metadata, []);
+});

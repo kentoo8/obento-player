@@ -21,8 +21,10 @@
     const audioContextFactory = options.audioContextFactory
       || (() => new (window.AudioContext || window.webkitAudioContext)());
     const requestFrame = options.requestFrame || requestAnimationFrame;
+    const cancelFrame = options.cancelFrame || cancelAnimationFrame;
     let audioContext = null;
     let autoLevelFrameId = null;
+    const initializedVideos = new Set();
 
     function getAudioContext() {
       if (!audioContext) audioContext = audioContextFactory();
@@ -103,6 +105,8 @@
         video._gainNode = gainNode;
         video._autoGain = 1;
         video._audioSetup = true;
+        video._audioNodes = [source, compressor, analyser, gainNode];
+        initializedVideos.add(video);
         apply(video, video.muted);
         start();
       } catch (error) {
@@ -110,7 +114,23 @@
       }
     }
 
-    return { apply, initialize, resume, start };
+    function reset() {
+      if (autoLevelFrameId) cancelFrame(autoLevelFrameId);
+      autoLevelFrameId = null;
+      for (const video of initializedVideos) {
+        for (const node of video._audioNodes || []) node.disconnect?.();
+        delete video._audioNodes;
+        delete video._analyser;
+        delete video._levelBuffer;
+        delete video._gainNode;
+        delete video._audioSetup;
+      }
+      initializedVideos.clear();
+      if (audioContext) audioContext.close?.().catch?.(() => {});
+      audioContext = null;
+    }
+
+    return { apply, initialize, reset, resume, start };
   }
 
   return { calculateTargetGain, createAudioManager };

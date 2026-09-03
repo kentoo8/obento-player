@@ -42,3 +42,17 @@ test('ピン留めとフォーカス中のセルは予約しない', () => {
   manager.schedule(createCell({ focused: true }));
   assert.equal(scheduled, 0);
 });
+
+test('cancelは予約を解除してセルからタイマーIDを除く', () => {
+  const cleared = [];
+  const cell = createCell();
+  cell._switchTimer = 42;
+  const manager = createPlaybackManager({
+    cells: () => [cell],
+    clearTimer: id => cleared.push(id),
+  });
+
+  manager.cancelAll();
+  assert.deepEqual(cleared, [42]);
+  assert.equal(cell._switchTimer, null);
+});

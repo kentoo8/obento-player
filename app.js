@@ -148,10 +148,7 @@
       // 不要なセルを削除してリソースを解放
       for (let i = currentCount - 1; i >= state.gridCount; i--) {
         const cell = currentCells[i];
-        if (cell._switchTimer) {
-          clearTimeout(cell._switchTimer);
-          cell._switchTimer = null;
-        }
+        playbackManager.cancel(cell);
         
         cell.querySelectorAll('.video-layer').forEach(v => {
           v.pause();
@@ -353,10 +350,7 @@
         pinBtn.classList.add('pinned');
         pinBtn.setAttribute('aria-pressed', 'true');
         pinBtn.setAttribute('aria-label', 'このセルのピン留めを解除');
-        if (cell._switchTimer) {
-          clearTimeout(cell._switchTimer);
-          cell._switchTimer = null;
-        }
+        playbackManager.cancel(cell);
       } else {
         cell.dataset.pinned = "false";
         cell.classList.remove('is-pinned');
@@ -402,10 +396,7 @@
         } else {
           activeLayer.pause();
           // 停止中は切り替えタイマーを止める
-          if (cell._switchTimer) {
-            clearTimeout(cell._switchTimer);
-            cell._switchTimer = null;
-          }
+          playbackManager.cancel(cell);
         }
       }
     });
@@ -472,10 +463,7 @@
         focusBtn.innerHTML = unfocusIconSVG();
         focusBtn.setAttribute('aria-pressed', 'true');
         focusBtn.setAttribute('aria-label', 'フォーカス表示を終了');
-        if (cell._switchTimer) {
-          clearTimeout(cell._switchTimer);
-          cell._switchTimer = null;
-        }
+        playbackManager.cancel(cell);
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
             c.style.display = 'none';
@@ -484,10 +472,7 @@
               c.dataset.wasPausedByFocus = activeLayer.paused ? "true" : "";
               activeLayer.pause();
             }
-            if (c._switchTimer) {
-              clearTimeout(c._switchTimer);
-              c._switchTimer = null;
-            }
+            playbackManager.cancel(c);
           }
         });
         const activeLayer = cell.querySelector('.video-layer.active');
@@ -1207,6 +1192,8 @@
       // Stop and clean up
       if (state.isPlaying) togglePlay();
       
+      playbackManager.cancelAll();
+      audioManager.reset();
       videoLibrary.reset();
       shuffleManager.reset();
       state.blacklistedVideos.clear();

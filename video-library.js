@@ -17,6 +17,7 @@
     let preloadQueue = [];
     let activePreloads = 0;
     let generation = 0;
+    const activeCancellations = new Set();
 
     function add(files) {
       const addedIndices = [];
@@ -63,16 +64,26 @@
         }
 
         const video = createVideo();
+        let settled = false;
         video.preload = 'metadata';
         video.src = entry.url;
-        const finish = metadata => {
+        const finish = (metadata, cancelled = false) => {
+          if (settled) return;
+          settled = true;
+          activeCancellations.delete(cancel);
+          video.onloadedmetadata = null;
+          video.onerror = null;
+          video.removeAttribute?.('src');
           video.src = '';
-          if (taskGeneration === generation && videos[index] === entry) {
+          video.load?.();
+          if (!cancelled && taskGeneration === generation && videos[index] === entry) {
             durations[index] = metadata.duration;
             onMetadata(index, metadata);
           }
           resolve();
         };
+        const cancel = () => finish(null, true);
+        activeCancellations.add(cancel);
         video.onloadedmetadata = () => finish({
           duration: video.duration,
           width: video.videoWidth,
@@ -85,6 +96,7 @@
     function reset() {
       generation++;
       preloadQueue = [];
+      for (const cancel of [...activeCancellations]) cancel();
       for (const video of videos) {
         if (video.url.startsWith('blob:')) urlApi.revokeObjectURL(video.url);
       }

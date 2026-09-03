@@ -10,12 +10,22 @@
     const clearTimer = options.clearTimer || clearTimeout;
 
     function schedule(cell, stagger = false) {
-      if (cell._switchTimer) clearTimer(cell._switchTimer);
+      cancel(cell);
       if (!options.isPlaying()) return;
       if (cell.dataset.pinned === 'true' || cell.classList.contains('focused')) return;
       const interval = options.getInterval();
       const delay = stagger ? interval * (0.2 + options.random()) : interval;
       cell._switchTimer = setTimer(() => options.switchCell(cell), delay * 1000);
+    }
+
+    function cancel(cell) {
+      if (!cell._switchTimer) return;
+      clearTimer(cell._switchTimer);
+      cell._switchTimer = null;
+    }
+
+    function cancelAll() {
+      options.cells().forEach(cancel);
     }
 
     function toggle() {
@@ -26,14 +36,12 @@
         options.cells().forEach(cell => schedule(cell, true));
       } else {
         options.allVideos().forEach(video => video.pause());
-        options.cells().forEach(cell => {
-          if (cell._switchTimer) clearTimer(cell._switchTimer);
-        });
+        cancelAll();
       }
       options.renderPlaying(nextPlaying);
     }
 
-    return { schedule, toggle };
+    return { cancel, cancelAll, schedule, toggle };
   }
 
   return { createPlaybackManager };

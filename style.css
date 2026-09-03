@@ -1119,6 +1119,12 @@ body.focus-mode .empty-state {
   }
 }
 
+@media (hover: none), (pointer: coarse) {
+  .alt-only-wrapper {
+    display: flex;
+  }
+}
+
 /* ===== Custom Tooltip ===== */
 .custom-tooltip {
   position: fixed;

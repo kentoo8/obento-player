@@ -18,7 +18,7 @@
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      <p>Drop video files here</p>
+      <p>動画ファイルをここにドロップ</p>
       <span class="drop-hint">mp4, webm, mov, avi, mkv</span>
     </div>
   </div>
@@ -94,7 +94,7 @@
           <!-- Volume (Bottom) -->
           <div class="volume-control-group">
             <div class="volume-slider-container">
-              <input type="range" id="volumeSlider" min="0" max="2" step="0.05" value="0.8">
+              <input type="range" id="volumeSlider" min="0" max="2" step="0.05" value="0.8" aria-label="音量">
               <div class="volume-marker-100"></div>
               <div id="volumeTooltip" class="volume-tooltip">100%</div>
             </div>
@@ -172,7 +172,7 @@
             <span class="menu-label">間隔 (秒)</span>
             <div class="interval-control">
               <button id="intervalDown" class="interval-btn" title="減らす">−</button>
-              <input type="number" id="intervalInput" value="10" min="5" max="300" step="5">
+              <input type="number" id="intervalInput" value="10" min="5" max="300" step="5" aria-label="切替間隔（秒）">
               <button id="intervalUp" class="interval-btn" title="増やす">+</button>
             </div>
           </div>
@@ -217,14 +217,14 @@
         <line x1="17" y1="7" x2="22" y2="7"/>
         <line x1="17" y1="17" x2="22" y2="17"/>
       </svg>
-      <h2>Drag & Drop Videos</h2>
-      <p>or click the button to select files</p>
+      <h2>動画をドラッグ＆ドロップ</h2>
+      <p>またはボタンから動画ファイルを選択してください</p>
       <button id="emptyAddBtn" class="btn btn-primary btn-lg">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Select Video Files
+        動画ファイルを選択
       </button>
     </div>
   </div>

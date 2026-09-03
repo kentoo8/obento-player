@@ -44,6 +44,10 @@
   });
   videoLibrary = createVideoLibrary({
     onMetadata: (index, metadata) => {
+      if (metadata.duration <= 0) {
+        const name = videoLibrary.get(index)?.file.name || '動画';
+        showFeedbackToast(`${name} の情報を読み込めませんでした`, 3000);
+      }
       updateVideoOrientation(index, metadata.width, metadata.height);
       shuffleManager.updateScenes(index);
     },
@@ -98,6 +102,7 @@
     addedIndices.forEach(index => shuffleManager.addVideo(index));
     if (unsupported.length > 0) {
       console.warn('再生できないファイル (ブラウザ非対応):', unsupported.join(', '));
+      showFeedbackToast(`非対応の動画を${unsupported.length}件スキップしました`, 3000);
     }
     if (videoLibrary.count() > 0) {
       emptyState.classList.add('hidden');
@@ -337,6 +342,8 @@
 
     // Pin toggle
     const pinBtn = overlay.querySelector('.cell-pin-btn');
+    pinBtn.setAttribute('aria-pressed', 'false');
+    pinBtn.setAttribute('aria-label', 'このセルをピン留め');
     pinBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const isPinned = cell.dataset.pinned === "true";
@@ -344,6 +351,8 @@
         cell.dataset.pinned = "true";
         cell.classList.add('is-pinned');
         pinBtn.classList.add('pinned');
+        pinBtn.setAttribute('aria-pressed', 'true');
+        pinBtn.setAttribute('aria-label', 'このセルのピン留めを解除');
         if (cell._switchTimer) {
           clearTimeout(cell._switchTimer);
           cell._switchTimer = null;
@@ -352,6 +361,8 @@
         cell.dataset.pinned = "false";
         cell.classList.remove('is-pinned');
         pinBtn.classList.remove('pinned');
+        pinBtn.setAttribute('aria-pressed', 'false');
+        pinBtn.setAttribute('aria-label', 'このセルをピン留め');
         if (state.isPlaying) scheduleCellSwitch(cell, true);
       }
     });
@@ -429,6 +440,8 @@
 
     // Focus toggle
     const focusBtn = overlay.querySelector('.cell-focus-btn');
+    focusBtn.setAttribute('aria-pressed', 'false');
+    focusBtn.setAttribute('aria-label', 'このセルをフォーカス表示');
     focusBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const isFocused = cell.classList.contains('focused');
@@ -437,6 +450,8 @@
         document.body.classList.remove('focus-mode');
         cell.classList.remove('focused');
         focusBtn.innerHTML = focusIconSVG();
+        focusBtn.setAttribute('aria-pressed', 'false');
+        focusBtn.setAttribute('aria-label', 'このセルをフォーカス表示');
         if (state.isPlaying) scheduleCellSwitch(cell, true);
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
@@ -455,6 +470,8 @@
         document.body.classList.add('focus-mode');
         cell.classList.add('focused');
         focusBtn.innerHTML = unfocusIconSVG();
+        focusBtn.setAttribute('aria-pressed', 'true');
+        focusBtn.setAttribute('aria-label', 'フォーカス表示を終了');
         if (cell._switchTimer) {
           clearTimeout(cell._switchTimer);
           cell._switchTimer = null;
@@ -575,7 +592,7 @@
   }
 
   let speedToastTimeout;
-  function showFeedbackToast(text) {
+  function showFeedbackToast(text, duration = 900) {
     if (!speedToast) return;
 
     speedToast.textContent = text;
@@ -583,7 +600,7 @@
     clearTimeout(speedToastTimeout);
     speedToastTimeout = setTimeout(() => {
       speedToast.classList.remove('show');
-    }, 900);
+    }, duration);
   }
 
   function showSpeedToast(speed) {
@@ -1200,7 +1217,7 @@
       document.body.classList.add('is-app-empty');
       videoGrid.style.display = ''; // Reset inline style
       
-      updateAllPreloadProgress();
+      showFeedbackToast('すべての動画をリセットしました', 2000);
     }
   });
 

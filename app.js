@@ -13,6 +13,7 @@
   const { loadSettings, saveSetting } = window.ObentoSettings;
   const { createShuffleManager } = window.ObentoShuffle;
   const { createVideoLibrary } = window.ObentoVideoLibrary;
+  const { createAudioManager } = window.ObentoAudio;
 
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
@@ -45,114 +46,6 @@
       shuffleManager.updateScenes(index);
     },
   });
-
-  // ===== Audio Management =====
-  const AUTO_LEVEL_TARGET_RMS = 0.12;
-  const AUTO_LEVEL_MIN_GAIN = 0.18;
-  const AUTO_LEVEL_SILENCE_RMS = 0.01;
-  let audioCtx = null;
-  let autoLevelFrameId = null;
-
-  function getAudioContext() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    return audioCtx;
-  }
-
-  function effectiveGainForVideo(video, shouldMute) {
-    if (shouldMute) return 0;
-    const autoGain = video._autoGain === undefined ? 1 : video._autoGain;
-    return state.volume * autoGain;
-  }
-
-  function applyAudioState(video, shouldMute) {
-    video.muted = shouldMute;
-    if (video._gainNode) {
-      video._gainNode.gain.value = effectiveGainForVideo(video, shouldMute);
-    } else {
-      video.volume = Math.min(1, Math.max(0, state.volume));
-    }
-  }
-
-  function resumeAudioContext() {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-  }
-
-  function initWebAudioForVideo(video) {
-    if (video._audioSetup) return;
-    try {
-      const ctx = getAudioContext();
-      const source = ctx.createMediaElementSource(video);
-      const compressor = ctx.createDynamicsCompressor();
-      compressor.threshold.value = -24;
-      compressor.knee.value = 18;
-      compressor.ratio.value = 8;
-      compressor.attack.value = 0.003;
-      compressor.release.value = 0.25;
-
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 1024;
-      analyser.smoothingTimeConstant = 0.5;
-
-      const gainNode = ctx.createGain();
-      source.connect(compressor);
-      compressor.connect(analyser);
-      analyser.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      video._analyser = analyser;
-      video._levelBuffer = new Uint8Array(analyser.fftSize);
-      video._gainNode = gainNode;
-      video._autoGain = 1;
-      video._audioSetup = true;
-      applyAudioState(video, video.muted);
-      startAutoLeveling();
-    } catch(err) {
-      console.warn("Web Audio API init failed", err);
-    }
-  }
-
-  function measureRms(video) {
-    if (!video._analyser || !video._levelBuffer) return 0;
-
-    video._analyser.getByteTimeDomainData(video._levelBuffer);
-
-    let sum = 0;
-    for (let i = 0; i < video._levelBuffer.length; i++) {
-      const centered = (video._levelBuffer[i] - 128) / 128;
-      sum += centered * centered;
-    }
-    return Math.sqrt(sum / video._levelBuffer.length);
-  }
-
-  function updateAutoGain(video) {
-    const rms = measureRms(video);
-    const targetGain = rms < AUTO_LEVEL_SILENCE_RMS
-      ? 1
-      : Math.min(1, Math.max(AUTO_LEVEL_MIN_GAIN, AUTO_LEVEL_TARGET_RMS / rms));
-    const currentGain = video._autoGain === undefined ? 1 : video._autoGain;
-    const smoothing = targetGain < currentGain ? 0.35 : 0.04;
-
-    video._autoGain = currentGain + (targetGain - currentGain) * smoothing;
-    applyAudioState(video, video.muted);
-  }
-
-  function startAutoLeveling() {
-    if (autoLevelFrameId) return;
-
-    const tick = () => {
-      videoGrid.querySelectorAll('.video-layer.active').forEach(video => {
-        if (!video.muted && !video.paused && video._audioSetup) {
-          updateAutoGain(video);
-        }
-      });
-      autoLevelFrameId = requestAnimationFrame(tick);
-    };
-
-    autoLevelFrameId = requestAnimationFrame(tick);
-  }
 
   // ===== DOM Refs =====
   const $ = (sel) => document.querySelector(sel);
@@ -196,6 +89,17 @@
   const moreMenu = $('#moreMenu');
   const moreMenuBtn = $('#moreMenuBtn');
   const theaterModeBtn = $('#theaterModeBtn');
+
+  const audioManager = createAudioManager({
+    getVolume: () => state.volume,
+    getActiveVideos: () => videoGrid.querySelectorAll('.video-layer.active'),
+  });
+  const {
+    apply: applyAudioState,
+    initialize: initWebAudioForVideo,
+    resume: resumeAudioContext,
+    start: startAutoLeveling,
+  } = audioManager;
 
   // ===== Video File Management =====
 

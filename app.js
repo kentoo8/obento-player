@@ -13,13 +13,12 @@
     normalizeSteppedValue,
     shuffle,
   } = window.ObentoCore;
+  const { loadSettings, saveSetting } = window.ObentoSettings;
 
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
 
-  const savedGridCount = localStorage.getItem('mvp_gridCount');
-  const savedInterval = localStorage.getItem('mvp_interval');
-  const savedAutoRotateDegree = parseInt(localStorage.getItem('mvp_autoRotateDegree'), 10);
+  const savedSettings = loadSettings(localStorage);
 
   const state = {
     videoFiles: [],       // Array of { file: File, url: string }
@@ -28,16 +27,16 @@
     sceneDecks: new Map(), // 動画ごとのシャッフル済みセグメント候補
     lastVideoIndex: null,
     lastSceneKeys: new Map(),
-    gridCount: savedGridCount ? parseInt(savedGridCount, 10) : 4,
-    interval: savedInterval ? parseInt(savedInterval, 10) : 10,         // seconds
+    gridCount: savedSettings.gridCount,
+    interval: savedSettings.interval,         // seconds
     isPlaying: false,
     volume: 0.8,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
     preloadQueue: [],     // メタデータ未取得のインデックスキュー
     activePreloads: 0,
     playbackSpeed: 1.0,
-    isAutoRotateOn: ROTATE_MODES.includes(savedAutoRotateDegree) && savedAutoRotateDegree !== 0,
-    autoRotateDegree: ROTATE_MODES.includes(savedAutoRotateDegree) ? savedAutoRotateDegree : 0,
+    isAutoRotateOn: savedSettings.autoRotateDegree !== 0,
+    autoRotateDegree: savedSettings.autoRotateDegree,
     blacklistedVideos: new Set(),
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
@@ -1293,7 +1292,7 @@
     opt.addEventListener('click', () => {
       const val = parseInt(opt.dataset.value, 10);
       state.gridCount = val;
-      localStorage.setItem('mvp_gridCount', val);
+      saveSetting(localStorage, 'gridCount', val);
       gridDropdownOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       
@@ -1378,7 +1377,7 @@
   intervalInput.addEventListener('change', () => {
     state.interval = normalizeSteppedValue(intervalInput.value, 10, 5, 300, 5);
     intervalInput.value = state.interval;
-    localStorage.setItem('mvp_interval', state.interval);
+    saveSetting(localStorage, 'interval', state.interval);
     buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
@@ -1388,7 +1387,7 @@
   intervalDown.addEventListener('click', () => {
     state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
-    localStorage.setItem('mvp_interval', state.interval);
+    saveSetting(localStorage, 'interval', state.interval);
     buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
@@ -1398,7 +1397,7 @@
   intervalUp.addEventListener('click', () => {
     state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
-    localStorage.setItem('mvp_interval', state.interval);
+    saveSetting(localStorage, 'interval', state.interval);
     buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
@@ -1443,7 +1442,7 @@
     const direction = e.altKey ? -1 : 1;
     const nextIndex = (currentIndex + direction + ROTATE_MODES.length) % ROTATE_MODES.length;
     state.autoRotateDegree = ROTATE_MODES[nextIndex];
-    localStorage.setItem('mvp_autoRotateDegree', state.autoRotateDegree);
+    saveSetting(localStorage, 'autoRotateDegree', state.autoRotateDegree);
 
     updateAutoRotateButton();
     

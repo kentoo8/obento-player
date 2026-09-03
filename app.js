@@ -336,20 +336,17 @@
     console.log(`[Shuffle] 動画${state.videoDeck.length}本の公平なデッキをビルド`);
   }
 
-  function takeVideo(activeSegments) {
+  function takeVideo(activeVideoIndices) {
     if (state.videoDeck.length === 0) refillVideoDeck();
     if (state.videoDeck.length === 0) return null;
 
-    let deckIndex = state.videoDeck.findIndex(videoIndex => !activeSegments.has(videoIndex));
-    if (
-      deckIndex === -1
-      && eligibleVideoIndices().some(videoIndex => !activeSegments.has(videoIndex))
-    ) {
+    let deckIndex = state.videoDeck.findIndex(videoIndex => !activeVideoIndices.has(videoIndex));
+    const inactiveVideoIndices = eligibleVideoIndices()
+      .filter(videoIndex => !activeVideoIndices.has(videoIndex));
+    if (deckIndex === -1 && inactiveVideoIndices.length > 0) {
       // ピン留めなどで巡回の残りがすべて表示中なら、非表示の動画だけで再開し、
       // 同時表示で同じ動画が重なるのを避ける。
-      state.videoDeck = shuffle(
-        eligibleVideoIndices().filter(videoIndex => !activeSegments.has(videoIndex))
-      );
+      state.videoDeck = shuffle(inactiveVideoIndices);
       deckIndex = 0;
     }
     if (deckIndex === -1) deckIndex = 0;
@@ -379,8 +376,8 @@
   }
 
   // 動画を均等に選び、その動画内の未使用シーンを選ぶ。
-  function popSegment(excludeKeys, activeSegments = new Map()) {
-    const videoIndex = takeVideo(activeSegments);
+  function popSegment(excludeKeys, activeVideoIndices = new Set()) {
+    const videoIndex = takeVideo(activeVideoIndices);
     if (videoIndex === null) {
       return { videoIndex: 0, startTime: 0, key: '0:0' };
     }
@@ -934,31 +931,28 @@
 
   // ===== Scene Assignment =====
 
+  function addActiveSegment(layer, activeKeys, activeVideoIndices) {
+    if (!layer || !layer._segKey) return;
+    activeKeys.add(layer._segKey);
+    activeVideoIndices.add(parseInt(layer._segKey.split(':')[0], 10));
+  }
+
   // 全セルに一括でシーンを割り当て（同バッチ内で重複なし）
   // targetCells が指定された場合は、指定されたセルのみを新しいシーンで上書きし、それ以外のセルの状態は維持する
   function assignRandomScenes(targetCells = null) {
     if (state.videoFiles.length === 0) return;
-    if (state.videoDeck.length === 0) refillVideoDeck();
-
     const allCells = videoGrid.querySelectorAll('.video-cell');
     const cellsToUpdate = targetCells || allCells;
-    
+    const targetCellSet = new Set(cellsToUpdate);
     const usedInBatch = new Set();
-    const activeSegments = new Map(); // videoIndex -> [startTimes]
+    const activeVideoIndices = new Set();
 
     // 1. 更新対象「外」のセル、または「ピン留め」されているセルから、現在再生中の情報を収集する
     allCells.forEach(cell => {
-      const isTarget = Array.from(cellsToUpdate).includes(cell);
+      const isTarget = targetCellSet.has(cell);
       if (!isTarget || cell.dataset.pinned === "true") {
         const activeLayer = cell.querySelector('.video-layer.active');
-        if (activeLayer && activeLayer._segKey) {
-          const parts = activeLayer._segKey.split(':');
-          const vi = parseInt(parts[0], 10);
-          const t = parseInt(parts[1], 10);
-          usedInBatch.add(activeLayer._segKey);
-          if (!activeSegments.has(vi)) activeSegments.set(vi, []);
-          activeSegments.get(vi).push(t);
-        }
+        addActiveSegment(activeLayer, usedInBatch, activeVideoIndices);
       }
     });
 
@@ -966,10 +960,9 @@
     cellsToUpdate.forEach(cell => {
       if (cell.dataset.pinned === "true") return;
 
-      const seg = popSegment(usedInBatch, activeSegments);
+      const seg = popSegment(usedInBatch, activeVideoIndices);
       usedInBatch.add(seg.key);
-      if (!activeSegments.has(seg.videoIndex)) activeSegments.set(seg.videoIndex, []);
-      activeSegments.get(seg.videoIndex).push(seg.startTime);
+      activeVideoIndices.add(seg.videoIndex);
       
       applySegmentToCell(cell, seg);
       scheduleCellSwitch(cell, true);
@@ -995,29 +988,20 @@
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
   function assignRandomSceneToCell(cell, immediate = false) {
     if (state.videoFiles.length === 0) return;
-    if (state.videoDeck.length === 0) refillVideoDeck();
-
-    // 現在他のセルで再生中のキーと時間を収集
+    // 現在他のセルで再生中のシーンキーと動画IDを収集
     const activeCells = videoGrid.querySelectorAll('.video-cell');
     const activeKeys = new Set();
-    const activeSegments = new Map();
+    const activeVideoIndices = new Set();
 
     activeCells.forEach(c => {
       if (c !== cell) {
         c.querySelectorAll('.video-layer.active').forEach(v => {
-          if (v._segKey) {
-            const parts = v._segKey.split(':');
-            const vi = parseInt(parts[0], 10);
-            const t = parseInt(parts[1], 10);
-            activeKeys.add(v._segKey);
-            if (!activeSegments.has(vi)) activeSegments.set(vi, []);
-            activeSegments.get(vi).push(t);
-          }
+          addActiveSegment(v, activeKeys, activeVideoIndices);
         });
       }
     });
 
-    const seg = popSegment(activeKeys, activeSegments);
+    const seg = popSegment(activeKeys, activeVideoIndices);
     applySegmentToCell(cell, seg, true, immediate);
     scheduleCellSwitch(cell, false);
   }

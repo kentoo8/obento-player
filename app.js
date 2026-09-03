@@ -16,7 +16,10 @@
   const state = {
     videoFiles: [],       // Array of { file: File, url: string }
     videoDurations: [],   // 各動画の長さ（秒）。null = 未取得
-    segmentPool: [],      // シャッフル済みセグメント候補 [{videoIndex, startTime, key}]
+    videoDeck: [],        // 公平に動画を一巡するためのシャッフル済み動画ID
+    sceneDecks: new Map(), // 動画ごとのシャッフル済みセグメント候補
+    lastVideoIndex: null,
+    lastSceneKeys: new Map(),
     gridCount: savedGridCount ? parseInt(savedGridCount, 10) : 4,
     interval: savedInterval ? parseInt(savedInterval, 10) : 10,         // seconds
     isPlaying: false,
@@ -208,6 +211,8 @@
       const idx = state.videoFiles.length;
       state.videoFiles.push({ file, url });
       state.videoDurations.push(null);
+      state.videoDeck.push(idx);
+      shuffle(state.videoDeck);
       enqueuePreload(idx);
     }
     if (unsupported.length > 0) {
@@ -246,7 +251,7 @@
       state.activePreloads++;
       preloadDurationAsync(idx).then(() => {
         state.activePreloads--;
-        buildSegmentPool(); // 新しく長さが判明したのでプールを更新
+        buildSceneDeck(idx); // 長さが判明した動画のシーン候補だけを更新
         processPreloadQueue(); // 次のキューへ
       });
     }
@@ -273,83 +278,113 @@
     });
   }
 
-  // ===== Segment Pool =====
+  // ===== Fair Shuffle Decks =====
 
-  // セグメントプールを（再）構築してシャッフルする
-  function buildSegmentPool() {
-    const intervalSec = state.interval;
-    const pool = [];
-
-    state.videoFiles.forEach((vf, vi) => {
-      if (state.blacklistedVideos.has(vi)) return;
-      
-      const dur = state.videoDurations[vi];
-      if (dur && dur > 0) {
-        // インターバル秒ごとにセグメントを作る
-        let t = 0;
-        while (t < dur) {
-          const key = `${vi}:${Math.round(t)}`;
-          pool.push({ videoIndex: vi, startTime: t, key });
-          t += intervalSec;
-        }
-      } else {
-        // 長さ未取得のときは先頭のみ仮登録
-        pool.push({ videoIndex: vi, startTime: 0, key: `${vi}:0`, isUnknown: true });
-      }
-    });
-
-    // Fisher-Yates シャッフル
-    for (let i = pool.length - 1; i > 0; i--) {
+  function shuffle(items) {
+    for (let i = items.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+      [items[i], items[j]] = [items[j], items[i]];
     }
-    state.segmentPool = pool;
-    console.log(`[Pool] ${pool.length} セグメントをビルド (動画${state.videoFiles.length}本)`);
+    return items;
   }
 
-  // プールからセグメントを1つ取り出す。
+  function eligibleVideoIndices() {
+    return state.videoFiles
+      .map((_, index) => index)
+      .filter(index => !state.blacklistedVideos.has(index));
+  }
+
+  function refillVideoDeck() {
+    state.videoDeck = shuffle(eligibleVideoIndices());
+    if (state.videoDeck.length > 1 && state.videoDeck[0] === state.lastVideoIndex) {
+      [state.videoDeck[0], state.videoDeck[1]] = [state.videoDeck[1], state.videoDeck[0]];
+    }
+  }
+
+  function createScenes(videoIndex) {
+    const duration = state.videoDurations[videoIndex];
+    if (!duration || duration <= 0) {
+      return [{ videoIndex, startTime: 0, key: `${videoIndex}:0`, isUnknown: true }];
+    }
+
+    const scenes = [];
+    for (let startTime = 0; startTime < duration; startTime += state.interval) {
+      scenes.push({
+        videoIndex,
+        startTime,
+        key: `${videoIndex}:${Math.round(startTime)}`,
+      });
+    }
+    return scenes;
+  }
+
+  function buildSceneDeck(videoIndex) {
+    const deck = shuffle(createScenes(videoIndex));
+    const lastKey = state.lastSceneKeys.get(videoIndex);
+    if (deck.length > 1 && deck[0].key === lastKey) {
+      [deck[0], deck[1]] = [deck[1], deck[0]];
+    }
+    state.sceneDecks.set(videoIndex, deck);
+  }
+
+  function buildShuffleDecks() {
+    refillVideoDeck();
+    state.sceneDecks.clear();
+    for (const videoIndex of eligibleVideoIndices()) {
+      buildSceneDeck(videoIndex);
+    }
+    console.log(`[Shuffle] 動画${state.videoDeck.length}本の公平なデッキをビルド`);
+  }
+
+  function takeVideo(activeSegments) {
+    if (state.videoDeck.length === 0) refillVideoDeck();
+    if (state.videoDeck.length === 0) return null;
+
+    let deckIndex = state.videoDeck.findIndex(videoIndex => !activeSegments.has(videoIndex));
+    if (
+      deckIndex === -1
+      && eligibleVideoIndices().some(videoIndex => !activeSegments.has(videoIndex))
+    ) {
+      // ピン留めなどで巡回の残りがすべて表示中なら、非表示の動画だけで再開し、
+      // 同時表示で同じ動画が重なるのを避ける。
+      state.videoDeck = shuffle(
+        eligibleVideoIndices().filter(videoIndex => !activeSegments.has(videoIndex))
+      );
+      deckIndex = 0;
+    }
+    if (deckIndex === -1) deckIndex = 0;
+    const videoIndex = state.videoDeck.splice(deckIndex, 1)[0];
+    state.lastVideoIndex = videoIndex;
+    return videoIndex;
+  }
+
+  function takeScene(videoIndex, excludeKeys) {
+    let deck = state.sceneDecks.get(videoIndex);
+    if (!deck || deck.length === 0) {
+      buildSceneDeck(videoIndex);
+      deck = state.sceneDecks.get(videoIndex);
+    }
+
+    let sceneIndex = deck.findIndex(scene => !excludeKeys.has(scene.key));
+    if (sceneIndex === -1) {
+      buildSceneDeck(videoIndex);
+      deck = state.sceneDecks.get(videoIndex);
+      sceneIndex = deck.findIndex(scene => !excludeKeys.has(scene.key));
+      if (sceneIndex === -1) sceneIndex = 0;
+    }
+
+    const scene = deck.splice(sceneIndex, 1)[0];
+    state.lastSceneKeys.set(videoIndex, scene.key);
+    return scene;
+  }
+
+  // 動画を均等に選び、その動画内の未使用シーンを選ぶ。
   function popSegment(excludeKeys, activeSegments = new Map()) {
-    if (state.segmentPool.length === 0) {
-      buildSegmentPool();
+    const videoIndex = takeVideo(activeSegments);
+    if (videoIndex === null) {
+      return { videoIndex: 0, startTime: 0, key: '0:0' };
     }
-    
-    // 第1候補: 「現在他のセルで再生されていないシーン」かつ「現在他のセルで再生されていない動画(別ファイル)」
-    for (let i = 0; i < state.segmentPool.length; i++) {
-      const seg = state.segmentPool[i];
-      if (!excludeKeys.has(seg.key) && !activeSegments.has(seg.videoIndex)) {
-        return state.segmentPool.splice(i, 1)[0];
-      }
-    }
-    
-    // 第2候補: 同じ動画の別シーンで妥協する場合、現在再生中のシーンとの「時間的な距離」が最も遠いものを選ぶ
-    let bestDist = -1;
-    let bestIndex = -1;
-
-    for (let i = 0; i < state.segmentPool.length; i++) {
-      const seg = state.segmentPool[i];
-      if (!excludeKeys.has(seg.key)) {
-        const activeTimes = activeSegments.get(seg.videoIndex) || [];
-        let minDist = Infinity;
-        for (const t of activeTimes) {
-          const dist = Math.abs(seg.startTime - t);
-          if (dist < minDist) minDist = dist;
-        }
-
-        if (minDist > bestDist) {
-          bestDist = minDist;
-          bestIndex = i;
-        }
-      }
-    }
-
-    if (bestIndex !== -1) {
-      return state.segmentPool.splice(bestIndex, 1)[0];
-    }
-    
-    // 全て除外対象（セグメントが少なすぎるケース）→ 先頭を返す
-    return state.segmentPool.length > 0
-      ? state.segmentPool.shift()
-      : { videoIndex: 0, startTime: 0, key: '0:0' };
+    return takeScene(videoIndex, excludeKeys);
   }
 
   // ===== Grid Rendering =====
@@ -638,7 +673,7 @@
       if (activeLayer && activeLayer._segKey) {
         const vi = parseInt(activeLayer._segKey.split(':')[0], 10);
         state.blacklistedVideos.add(vi);
-        buildSegmentPool();
+        buildShuffleDecks();
         
         // 除外された動画を表示しているすべてのセルを新しいシーンへ切り替える
         const cells = videoGrid.querySelectorAll('.video-cell');
@@ -903,7 +938,7 @@
   // targetCells が指定された場合は、指定されたセルのみを新しいシーンで上書きし、それ以外のセルの状態は維持する
   function assignRandomScenes(targetCells = null) {
     if (state.videoFiles.length === 0) return;
-    if (state.segmentPool.length === 0) buildSegmentPool();
+    if (state.videoDeck.length === 0) refillVideoDeck();
 
     const allCells = videoGrid.querySelectorAll('.video-cell');
     const cellsToUpdate = targetCells || allCells;
@@ -960,7 +995,7 @@
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
   function assignRandomSceneToCell(cell, immediate = false) {
     if (state.videoFiles.length === 0) return;
-    if (state.segmentPool.length === 0) buildSegmentPool();
+    if (state.videoDeck.length === 0) refillVideoDeck();
 
     // 現在他のセルで再生中のキーと時間を収集
     const activeCells = videoGrid.querySelectorAll('.video-cell');
@@ -1387,7 +1422,7 @@
     state.interval = Math.round(state.interval / 5) * 5;
     intervalInput.value = state.interval;
     localStorage.setItem('mvp_interval', state.interval);
-    buildSegmentPool();
+    buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1397,7 +1432,7 @@
     state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
     localStorage.setItem('mvp_interval', state.interval);
-    buildSegmentPool();
+    buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1407,7 +1442,7 @@
     state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
     localStorage.setItem('mvp_interval', state.interval);
-    buildSegmentPool();
+    buildShuffleDecks();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1427,7 +1462,10 @@
       
       state.videoFiles = [];
       state.videoDurations = [];
-      state.segmentPool = [];
+      state.videoDeck = [];
+      state.sceneDecks.clear();
+      state.lastVideoIndex = null;
+      state.lastSceneKeys.clear();
       state.preloadQueue = []; // Clear queue
       state.activePreloads = 0; // Reset counter
       state.blacklistedVideos.clear();

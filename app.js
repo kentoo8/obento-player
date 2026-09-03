@@ -82,6 +82,8 @@
     renderPlaying: isPlaying => {
       playIcon.style.display = isPlaying ? 'none' : 'block';
       pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      playAllBtn.setAttribute('aria-pressed', String(isPlaying));
+      playAllBtn.setAttribute('aria-label', isPlaying ? 'すべて一時停止' : 'すべて再生');
     },
     setPlaying: isPlaying => { state.isPlaying = isPlaying; },
     switchCell: cell => assignRandomSceneToCell(cell),
@@ -232,6 +234,9 @@
       if (!btn) return;
       const activeLayer = cell.querySelector('.video-layer.active');
       if (activeLayer) {
+        const isPaused = activeLayer.paused;
+        btn.setAttribute('aria-label', isPaused ? 'このセルを再生' : 'このセルを一時停止');
+        btn.setAttribute('aria-pressed', String(!isPaused));
         if (activeLayer.paused) {
           btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>`;
         } else {
@@ -561,6 +566,7 @@
     autoRotateBtn.classList.toggle('active', state.isAutoRotateOn);
     autoRotateBtn.classList.toggle('is-90', state.autoRotateDegree === 90);
     autoRotateBtn.title = `縦動画の回転: ${state.autoRotateDegree}度`;
+    autoRotateBtn.setAttribute('aria-pressed', String(state.isAutoRotateOn));
 
     const label = autoRotateBtn.querySelector('span');
     if (label) {
@@ -597,6 +603,7 @@
         const isSolo = state.soloCellIndex === parseInt(cell.dataset.index, 10);
         btn.innerHTML = isMuted ? muteIconSVG() : unmuteIconSVG();
         btn.classList.toggle('is-solo', isSolo);
+        btn.setAttribute('aria-pressed', String(isSolo));
       }
     });
   }
@@ -624,6 +631,8 @@
   function setAudioState(on) {
     state.isAudioOn = on;
     state.soloCellIndex = null; // 全体切り替え時はソロ解除
+    audioToggleBtn.setAttribute('aria-pressed', String(on));
+    audioToggleBtn.setAttribute('aria-label', on ? '音声をオフにする' : '音声をオンにする');
     if (on) {
       resumeAudioContext();
       startAutoLeveling();
@@ -811,6 +820,61 @@
 
   // ===== Event Listeners =====
 
+  const dropdowns = [
+    { container: gridDropdown, trigger: gridDropdownBtn, options: gridDropdownOptions },
+    { container: speedDropdown, trigger: speedDropdownBtn, options: speedDropdownOptions },
+    {
+      container: moreMenu,
+      trigger: moreMenuBtn,
+      options: Array.from(moreMenu.querySelectorAll('button, input')),
+    },
+  ];
+
+  function setDropdownOpen(dropdown, open, focusOption = false) {
+    dropdown.container.classList.toggle('open', open);
+    dropdown.trigger.setAttribute('aria-expanded', String(open));
+    if (open && focusOption) {
+      const selected = dropdown.options.find(option => option.classList.contains('active'));
+      (selected || dropdown.options[0])?.focus();
+    }
+  }
+
+  function closeDropdowns(except = null) {
+    dropdowns.forEach(dropdown => {
+      if (dropdown !== except) setDropdownOpen(dropdown, false);
+    });
+  }
+
+  dropdowns.forEach(dropdown => {
+    dropdown.trigger.addEventListener('keydown', event => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        closeDropdowns(dropdown);
+        setDropdownOpen(dropdown, true, true);
+      }
+    });
+    dropdown.container.addEventListener('keydown', event => {
+      const currentIndex = dropdown.options.indexOf(document.activeElement);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setDropdownOpen(dropdown, false);
+        dropdown.trigger.focus();
+      } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const direction = event.key === 'ArrowDown' ? 1 : -1;
+        const nextIndex = (Math.max(0, currentIndex) + direction + dropdown.options.length)
+          % dropdown.options.length;
+        dropdown.options[nextIndex].focus();
+      } else if (
+        (event.key === 'Enter' || event.key === ' ')
+        && document.activeElement?.getAttribute('role') === 'option'
+      ) {
+        event.preventDefault();
+        document.activeElement.click();
+      }
+    });
+  });
+
   // Drag & Drop
   let dragCounter = 0; // track enter/leave
 
@@ -980,18 +1044,17 @@
   // Shuffle
   shuffleBtn.addEventListener('click', () => {
     if (videoLibrary.count() === 0) return;
-    gridDropdown.classList.remove('open');
-    speedDropdown.classList.remove('open');
-    moreMenu.classList.remove('open');
+    closeDropdowns();
     assignRandomScenes();
   });
 
   // Grid Dropdown Toggle
   gridDropdownBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    speedDropdown.classList.remove('open');
-    moreMenu.classList.remove('open');
-    gridDropdown.classList.toggle('open');
+    const dropdown = dropdowns[0];
+    const willOpen = !gridDropdown.classList.contains('open');
+    closeDropdowns(dropdown);
+    setDropdownOpen(dropdown, willOpen);
   });
 
   // Select Grid Option
@@ -1000,13 +1063,17 @@
       const val = parseInt(opt.dataset.value, 10);
       state.gridCount = val;
       saveSetting(localStorage, 'gridCount', val);
-      gridDropdownOptions.forEach(o => o.classList.remove('active'));
+      gridDropdownOptions.forEach(o => {
+        o.classList.remove('active');
+        o.setAttribute('aria-selected', 'false');
+      });
       opt.classList.add('active');
+      opt.setAttribute('aria-selected', 'true');
       
       updateGridUI();
       renderGrid();
       
-      gridDropdown.classList.remove('open');
+      setDropdownOpen(dropdowns[0], false);
       if (state.isPlaying) {
         videoGrid.querySelectorAll('video').forEach(v => v.play().catch(() => {}));
       }
@@ -1016,9 +1083,10 @@
   // Speed Dropdown Toggle
   speedDropdownBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    gridDropdown.classList.remove('open');
-    moreMenu.classList.remove('open');
-    speedDropdown.classList.toggle('open');
+    const dropdown = dropdowns[1];
+    const willOpen = !speedDropdown.classList.contains('open');
+    closeDropdowns(dropdown);
+    setDropdownOpen(dropdown, willOpen);
   });
 
   // Select Speed Option
@@ -1026,8 +1094,12 @@
     opt.addEventListener('click', () => {
       const val = parseFloat(opt.dataset.value);
       state.playbackSpeed = val;
-      speedDropdownOptions.forEach(o => o.classList.remove('active'));
+      speedDropdownOptions.forEach(o => {
+        o.classList.remove('active');
+        o.setAttribute('aria-selected', 'false');
+      });
       opt.classList.add('active');
+      opt.setAttribute('aria-selected', 'true');
       speedLabel.textContent = val + 'x';
       showSpeedToast(val);
       
@@ -1035,27 +1107,26 @@
       videoGrid.querySelectorAll('video').forEach(v => {
         v.playbackRate = val;
       });
-      speedDropdown.classList.remove('open');
+      setDropdownOpen(dropdowns[1], false);
     });
   });
 
   // More Menu Toggle
   moreMenuBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    gridDropdown.classList.remove('open');
-    speedDropdown.classList.remove('open');
-    moreMenu.classList.toggle('open');
+    const dropdown = dropdowns[2];
+    const willOpen = !moreMenu.classList.contains('open');
+    closeDropdowns(dropdown);
+    setDropdownOpen(dropdown, willOpen);
   });
 
   theaterModeBtn.addEventListener('click', () => {
     document.body.classList.add('focus-mode');
-    moreMenu.classList.remove('open');
+    setDropdownOpen(dropdowns[2], false);
   });
 
   sidebarCollapseBtn.addEventListener('click', () => {
-    gridDropdown.classList.remove('open');
-    speedDropdown.classList.remove('open');
-    moreMenu.classList.remove('open');
+    closeDropdowns();
     toggleFocusModeFromShortcut();
   });
 
@@ -1066,16 +1137,16 @@
   // Close dropdowns when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.grid-dropdown')) {
-      gridDropdown.classList.remove('open');
-      speedDropdown.classList.remove('open');
-      moreMenu.classList.remove('open');
+      closeDropdowns();
     }
   });
 
   // Initial UI Setup
   intervalInput.value = state.interval;
   gridDropdownOptions.forEach(o => {
-    o.classList.toggle('active', parseInt(o.dataset.value, 10) === state.gridCount);
+    const selected = parseInt(o.dataset.value, 10) === state.gridCount;
+    o.classList.toggle('active', selected);
+    o.setAttribute('aria-selected', String(selected));
   });
   updateGridUI();
   updateAutoRotateButton();
@@ -1130,6 +1201,13 @@
       videoGrid.style.display = ''; // Reset inline style
       
       updateAllPreloadProgress();
+    }
+  });
+
+  appLogo.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      appLogo.click();
     }
   });
 

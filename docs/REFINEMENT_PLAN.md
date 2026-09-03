@@ -39,7 +39,7 @@ Obento Player の「動画を選ぶだけですぐ使える」という手軽さ
 
 ## 実施計画
 
-進捗: Phase 1、Phase 2 完了。Phase 3 着手前
+進捗: Phase 1、Phase 2 完了。Phase 3 実施中
 
 ### Phase 1: 品質の土台
 

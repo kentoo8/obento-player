@@ -387,6 +387,11 @@ body.focus-mode .focus-mode-return-btn:focus-visible {
   transition: all var(--transition-fast);
   color: var(--text-muted);
   font-size: 0.85rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
 }
 
 .grid-dropdown-option:hover {
@@ -394,9 +399,23 @@ body.focus-mode .focus-mode-return-btn:focus-visible {
   color: var(--text-primary);
 }
 
-.grid-dropdown-option active {
+.grid-dropdown-option.active {
   background: rgba(var(--accent-primary-rgb), 0.15);
   color: var(--accent-primary);
+}
+
+:where(button, [role="button"], input):focus-visible {
+  outline: 2px solid var(--accent-secondary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .grid-dropdown-option svg {

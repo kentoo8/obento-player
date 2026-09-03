@@ -14,6 +14,8 @@
   const { createShuffleManager } = window.ObentoShuffle;
   const { createVideoLibrary } = window.ObentoVideoLibrary;
   const { createAudioManager } = window.ObentoAudio;
+  const { collectUi } = window.ObentoUi;
+  const { createPlaybackManager } = window.ObentoPlayback;
 
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
@@ -47,48 +49,17 @@
     },
   });
 
-  // ===== DOM Refs =====
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
-
-  const dropOverlay = $('#dropOverlay');
-  const videoGrid = $('#videoGrid');
-  const emptyState = $('#emptyState');
-  const intervalInput = $('#intervalInput');
-  const gridDropdown = $('#gridDropdown');
-  const gridDropdownBtn = $('#gridDropdownBtn');
-  const gridDropdownContent = $('#gridDropdownContent');
-  const gridDropdownOptions = Array.from($$('#gridDropdown .grid-dropdown-option'));
-  const gridIconContainer = $('#gridIconContainer');
-  const gridCountLabel = $('#gridCountLabel');
-
-  const speedDropdown = $('#speedDropdown');
-  const speedDropdownBtn = $('#speedDropdownBtn');
-  const speedDropdownOptions = Array.from($$('#speedDropdown .grid-dropdown-option'));
-  const speedLabel = $('#speedLabel');
-  const speedToast = $('#speedToast');
-  const sidebarCollapseBtn = $('#sidebarCollapseBtn');
-  const focusModeReturnBtn = $('#focusModeReturnBtn');
-  const volumeSlider = $('#volumeSlider');
-  const volumeTooltip = $('#volumeTooltip');
-  const appLogo = $('#appLogo');
-  const autoRotateBtn = $('#autoRotateBtn');
-  const playAllBtn = $('#playAllBtn');
-  const playIcon = $('#playIcon');
-  const pauseIcon = $('#pauseIcon');
-  const shuffleBtn = $('#shuffleBtn');
-  const addFilesBtn = $('#addFilesBtn');
-  const emptyAddBtn = $('#emptyAddBtn');
-  const fileInput = $('#fileInput');
-  const intervalDown = $('#intervalDown');
-  const intervalUp = $('#intervalUp');
-  const audioToggleBtn = $('#audioToggleBtn');
-  const audioOffIcon = $('#audioOffIcon');
-  const audioOnIcon = $('#audioOnIcon');
-
-  const moreMenu = $('#moreMenu');
-  const moreMenuBtn = $('#moreMenuBtn');
-  const theaterModeBtn = $('#theaterModeBtn');
+  // ===== UI =====
+  const {
+    addFilesBtn, appLogo, audioOffIcon, audioOnIcon, audioToggleBtn,
+    autoRotateBtn, dropOverlay, emptyAddBtn, emptyState, fileInput,
+    focusModeReturnBtn, gridCountLabel, gridDropdown, gridDropdownBtn,
+    gridDropdownContent, gridDropdownOptions, gridIconContainer, intervalDown,
+    intervalInput, intervalUp, moreMenu, moreMenuBtn, pauseIcon, playAllBtn,
+    playIcon, shuffleBtn, sidebarCollapseBtn, speedDropdown, speedDropdownBtn,
+    speedDropdownOptions, speedLabel, speedToast, theaterModeBtn, videoGrid,
+    volumeSlider, volumeTooltip,
+  } = collectUi(document);
 
   const audioManager = createAudioManager({
     getVolume: () => state.volume,
@@ -100,6 +71,23 @@
     resume: resumeAudioContext,
     start: startAutoLeveling,
   } = audioManager;
+
+  const playbackManager = createPlaybackManager({
+    activeVideos: () => videoGrid.querySelectorAll('.video-layer.active'),
+    allVideos: () => videoGrid.querySelectorAll('.video-layer'),
+    cells: () => videoGrid.querySelectorAll('.video-cell'),
+    getInterval: () => state.interval,
+    isPlaying: () => state.isPlaying,
+    random: Math.random,
+    renderPlaying: isPlaying => {
+      playIcon.style.display = isPlaying ? 'none' : 'block';
+      pauseIcon.style.display = isPlaying ? 'block' : 'none';
+    },
+    setPlaying: isPlaying => { state.isPlaying = isPlaying; },
+    switchCell: cell => assignRandomSceneToCell(cell),
+  });
+  const scheduleCellSwitch = playbackManager.schedule;
+  const togglePlay = playbackManager.toggle;
 
   // ===== Video File Management =====
 
@@ -713,22 +701,6 @@
     });
   }
 
-  function scheduleCellSwitch(cell, stagger = false) {
-    if (cell._switchTimer) clearTimeout(cell._switchTimer);
-    if (!state.isPlaying) return;
-    if (cell.dataset.pinned === "true" || cell.classList.contains('focused')) return;
-
-    let delaySec = state.interval;
-    if (stagger) {
-      // 最初の切り替えタイミングを 0.2倍〜1.2倍 の間でランダムにずらす
-      delaySec = state.interval * (0.2 + Math.random());
-    }
-
-    cell._switchTimer = setTimeout(() => {
-      assignRandomSceneToCell(cell);
-    }, delaySec * 1000);
-  }
-
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
   function assignRandomSceneToCell(cell, immediate = false) {
     if (videoLibrary.count() === 0) return;
@@ -834,35 +806,6 @@
     nextLayer.addEventListener('canplay', seekAndPlay);
     nextLayer.src = chosen.url;
   }
-
-  // ===== Playback Control =====
-
-  function togglePlay() {
-    state.isPlaying = !state.isPlaying;
-
-    if (state.isPlaying) {
-      videoGrid.querySelectorAll('.video-layer.active').forEach(v => v.play().catch(() => {}));
-      
-      videoGrid.querySelectorAll('.video-cell').forEach(cell => {
-        scheduleCellSwitch(cell, true); // タイマー再開（ずらす）
-      });
-      
-      playIcon.style.display = 'none';
-      pauseIcon.style.display = 'block';
-    } else {
-      videoGrid.querySelectorAll('.video-layer').forEach(v => v.pause());
-      
-      videoGrid.querySelectorAll('.video-cell').forEach(cell => {
-        if (cell._switchTimer) clearTimeout(cell._switchTimer);
-      });
-      
-      playIcon.style.display = 'block';
-      pauseIcon.style.display = 'none';
-    }
-  }
-
-
-
 
   // ===== Utility =====
 

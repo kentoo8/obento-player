@@ -12,6 +12,7 @@
   } = window.ObentoCore;
   const { loadSettings, saveSetting } = window.ObentoSettings;
   const { createShuffleManager } = window.ObentoShuffle;
+  const { createVideoLibrary } = window.ObentoVideoLibrary;
 
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
@@ -19,15 +20,11 @@
   const savedSettings = loadSettings(localStorage);
 
   const state = {
-    videoFiles: [],       // Array of { file: File, url: string }
-    videoDurations: [],   // 各動画の長さ（秒）。null = 未取得
     gridCount: savedSettings.gridCount,
     interval: savedSettings.interval,         // seconds
     isPlaying: false,
     volume: 0.8,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
-    preloadQueue: [],     // メタデータ未取得のインデックスキュー
-    activePreloads: 0,
     playbackSpeed: 1.0,
     isAutoRotateOn: savedSettings.autoRotateDegree !== 0,
     autoRotateDegree: savedSettings.autoRotateDegree,
@@ -35,11 +32,18 @@
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
 
+  let videoLibrary;
   const shuffleManager = createShuffleManager({
-    getVideoCount: () => state.videoFiles.length,
-    getDuration: index => state.videoDurations[index],
+    getVideoCount: () => videoLibrary.count(),
+    getDuration: index => videoLibrary.durationAt(index),
     getInterval: () => state.interval,
     isExcluded: index => state.blacklistedVideos.has(index),
+  });
+  videoLibrary = createVideoLibrary({
+    onMetadata: (index, metadata) => {
+      updateVideoOrientation(index, metadata.width, metadata.height);
+      shuffleManager.updateScenes(index);
+    },
   });
 
   // ===== Audio Management =====
@@ -195,37 +199,13 @@
 
   // ===== Video File Management =====
 
-  const VIDEO_EXTS = /\.(mp4|webm|mov|mkv|avi|m4v)$/i;
   function addVideoFiles(files) {
-    const unsupported = [];
-    for (const file of files) {
-      const isVideoType = file.type && file.type.startsWith('video/');
-      const isVideoExt = VIDEO_EXTS.test(file.name);
-      
-      if (!isVideoType && !isVideoExt) {
-        // フォルダ内などで見つかった無関係なファイル（画像など）は警告を出さずに無視
-        continue;
-      }
-
-      const testVideo = document.createElement('video');
-      const testType = file.type || `video/${file.name.split('.').pop().toLowerCase()}`;
-      const canPlay = testVideo.canPlayType(testType);
-      
-      if (canPlay === '' && file.type !== '') {
-        unsupported.push(file.name);
-        continue;
-      }
-      const url = URL.createObjectURL(file);
-      const idx = state.videoFiles.length;
-      state.videoFiles.push({ file, url });
-      state.videoDurations.push(null);
-      shuffleManager.addVideo(idx);
-      enqueuePreload(idx);
-    }
+    const { addedIndices, unsupported } = videoLibrary.add(files);
+    addedIndices.forEach(index => shuffleManager.addVideo(index));
     if (unsupported.length > 0) {
       console.warn('再生できないファイル (ブラウザ非対応):', unsupported.join(', '));
     }
-    if (state.videoFiles.length > 0) {
+    if (videoLibrary.count() > 0) {
       emptyState.classList.add('hidden');
       document.body.classList.remove('is-app-empty');
       renderGrid();
@@ -236,53 +216,12 @@
     }
   }
 
-  // ===== Metadata Preload Queue =====
-  const MAX_CONCURRENT_PRELOADS = 3;
-
   function updateVideoOrientation(index, width, height) {
-    const videoFile = state.videoFiles[index];
+    const videoFile = videoLibrary.get(index);
     if (!videoFile || !width || !height) return;
 
     videoFile.isPortrait = height > width;
     applyRotationToVideo(index);
-  }
-
-  function enqueuePreload(index) {
-    state.preloadQueue.push(index);
-    processPreloadQueue();
-  }
-
-  function processPreloadQueue() {
-    while (state.activePreloads < MAX_CONCURRENT_PRELOADS && state.preloadQueue.length > 0) {
-      const idx = state.preloadQueue.shift();
-      state.activePreloads++;
-      preloadDurationAsync(idx).then(() => {
-        state.activePreloads--;
-        shuffleManager.updateScenes(idx); // 長さが判明した動画のシーン候補だけを更新
-        processPreloadQueue(); // 次のキューへ
-      });
-    }
-  }
-
-  function preloadDurationAsync(index) {
-    return new Promise(resolve => {
-      const tmp = document.createElement('video');
-      tmp.preload = 'metadata';
-      tmp.src = state.videoFiles[index].url;
-      
-      tmp.onloadedmetadata = () => {
-        state.videoDurations[index] = tmp.duration;
-        updateVideoOrientation(index, tmp.videoWidth, tmp.videoHeight);
-        tmp.src = '';
-        resolve();
-      };
-      
-      tmp.onerror = () => {
-        state.videoDurations[index] = 0; // fallback
-        tmp.src = '';
-        resolve();
-      };
-    });
   }
 
   // ===== Grid Rendering =====
@@ -290,7 +229,7 @@
   function renderGrid() {
     videoGrid.className = `video-grid grid-${state.gridCount}`;
 
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
 
     const currentCells = Array.from(videoGrid.querySelectorAll('.video-cell'));
     const currentCount = currentCells.length;
@@ -701,7 +640,7 @@
 
   function rotationDegreeForVideo(videoIndex) {
     if (state.autoRotateDegree === 0) return 0;
-    const videoFile = state.videoFiles[videoIndex];
+    const videoFile = videoLibrary.get(videoIndex);
     return videoFile && videoFile.isPortrait ? state.autoRotateDegree : 0;
   }
 
@@ -841,7 +780,7 @@
   // 全セルに一括でシーンを割り当て（同バッチ内で重複なし）
   // targetCells が指定された場合は、指定されたセルのみを新しいシーンで上書きし、それ以外のセルの状態は維持する
   function assignRandomScenes(targetCells = null) {
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
     const allCells = videoGrid.querySelectorAll('.video-cell');
     const cellsToUpdate = targetCells || allCells;
     const targetCellSet = new Set(cellsToUpdate);
@@ -888,7 +827,7 @@
 
   // 1つのセルに対して、現在他のセルで使われていないセグメントを割り当てる
   function assignRandomSceneToCell(cell, immediate = false) {
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
     // 現在他のセルで再生中のシーンキーと動画IDを収集
     const activeCells = videoGrid.querySelectorAll('.video-cell');
     const activeKeys = new Set();
@@ -921,7 +860,7 @@
     const activeLayer = cell.querySelector('.video-layer.active');
     const nextLayer = Array.from(layers).find(v => v !== activeLayer) || layers[0];
 
-    const chosen = state.videoFiles[seg.videoIndex];
+    const chosen = videoLibrary.get(seg.videoIndex);
     if (!chosen) return;
 
     nextLayer._vi = seg.videoIndex; // Store index for later reference (e.g. rotate toggle)
@@ -1187,13 +1126,13 @@
 
   // Play / Pause
   playAllBtn.addEventListener('click', () => {
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
     togglePlay();
   });
 
   // Shuffle
   shuffleBtn.addEventListener('click', () => {
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
     gridDropdown.classList.remove('open');
     speedDropdown.classList.remove('open');
     moreMenu.classList.remove('open');
@@ -1327,21 +1266,14 @@
 
   // Reset All Logic
   appLogo.addEventListener('click', () => {
-    if (state.videoFiles.length === 0) return;
+    if (videoLibrary.count() === 0) return;
     
     if (confirm('すべての動画をクリアして初期状態に戻しますか？')) {
       // Stop and clean up
       if (state.isPlaying) togglePlay();
       
-      state.videoFiles.forEach(v => {
-        if (v.url.startsWith('blob:')) URL.revokeObjectURL(v.url);
-      });
-      
-      state.videoFiles = [];
-      state.videoDurations = [];
+      videoLibrary.reset();
       shuffleManager.reset();
-      state.preloadQueue = []; // Clear queue
-      state.activePreloads = 0; // Reset counter
       state.blacklistedVideos.clear();
       
       // Reset UI
@@ -1401,7 +1333,7 @@
     switch (e.code) {
       case 'Space':
         e.preventDefault();
-        if (state.videoFiles.length > 0) {
+        if (videoLibrary.count() > 0) {
           if (document.body.classList.contains('focus-mode')) {
             const focusedCell = document.querySelector('.video-cell.focused');
             if (focusedCell) {
@@ -1414,7 +1346,7 @@
         }
         break;
       case 'KeyS':
-        if (state.videoFiles.length > 0 && !document.body.classList.contains('focus-mode')) {
+        if (videoLibrary.count() > 0 && !document.body.classList.contains('focus-mode')) {
           assignRandomScenes();
         }
         break;

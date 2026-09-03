@@ -2,7 +2,7 @@
   "name": "obento-player",
   "private": true,
   "scripts": {
-    "check": "node --check core.js && node --check settings.js && node --check shuffle-manager.js && node --check app.js",
+    "check": "node --check core.js && node --check settings.js && node --check shuffle-manager.js && node --check video-library.js && node --check app.js",
     "test": "node --test"
   }
 }

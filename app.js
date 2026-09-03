@@ -7,13 +7,11 @@
   'use strict';
 
   const {
-    createDeck,
-    createScenes,
     formatTime,
     normalizeSteppedValue,
-    shuffle,
   } = window.ObentoCore;
   const { loadSettings, saveSetting } = window.ObentoSettings;
+  const { createShuffleManager } = window.ObentoShuffle;
 
   // ===== State =====
   const ROTATE_MODES = [0, 270, 90];
@@ -23,10 +21,6 @@
   const state = {
     videoFiles: [],       // Array of { file: File, url: string }
     videoDurations: [],   // 各動画の長さ（秒）。null = 未取得
-    videoDeck: [],        // 公平に動画を一巡するためのシャッフル済み動画ID
-    sceneDecks: new Map(), // 動画ごとのシャッフル済みセグメント候補
-    lastVideoIndex: null,
-    lastSceneKeys: new Map(),
     gridCount: savedSettings.gridCount,
     interval: savedSettings.interval,         // seconds
     isPlaying: false,
@@ -40,6 +34,13 @@
     blacklistedVideos: new Set(),
     soloCellIndex: null,  // ソロモード（特定のセルのみ音声ON）のセルインデックス
   };
+
+  const shuffleManager = createShuffleManager({
+    getVideoCount: () => state.videoFiles.length,
+    getDuration: index => state.videoDurations[index],
+    getInterval: () => state.interval,
+    isExcluded: index => state.blacklistedVideos.has(index),
+  });
 
   // ===== Audio Management =====
   const AUTO_LEVEL_TARGET_RMS = 0.12;
@@ -218,8 +219,7 @@
       const idx = state.videoFiles.length;
       state.videoFiles.push({ file, url });
       state.videoDurations.push(null);
-      state.videoDeck.push(idx);
-      state.videoDeck = shuffle(state.videoDeck);
+      shuffleManager.addVideo(idx);
       enqueuePreload(idx);
     }
     if (unsupported.length > 0) {
@@ -258,7 +258,7 @@
       state.activePreloads++;
       preloadDurationAsync(idx).then(() => {
         state.activePreloads--;
-        buildSceneDeck(idx); // 長さが判明した動画のシーン候補だけを更新
+        shuffleManager.updateScenes(idx); // 長さが判明した動画のシーン候補だけを更新
         processPreloadQueue(); // 次のキューへ
       });
     }
@@ -283,85 +283,6 @@
         resolve();
       };
     });
-  }
-
-  // ===== Fair Shuffle Decks =====
-
-  function eligibleVideoIndices() {
-    return state.videoFiles
-      .map((_, index) => index)
-      .filter(index => !state.blacklistedVideos.has(index));
-  }
-
-  function refillVideoDeck() {
-    state.videoDeck = createDeck(eligibleVideoIndices(), state.lastVideoIndex);
-  }
-
-  function buildSceneDeck(videoIndex) {
-    const scenes = createScenes(videoIndex, state.videoDurations[videoIndex], state.interval);
-    const deck = createDeck(scenes, null);
-    const lastKey = state.lastSceneKeys.get(videoIndex);
-    if (deck.length > 1 && deck[0].key === lastKey) {
-      [deck[0], deck[1]] = [deck[1], deck[0]];
-    }
-    state.sceneDecks.set(videoIndex, deck);
-  }
-
-  function buildShuffleDecks() {
-    refillVideoDeck();
-    state.sceneDecks.clear();
-    for (const videoIndex of eligibleVideoIndices()) {
-      buildSceneDeck(videoIndex);
-    }
-    console.log(`[Shuffle] 動画${state.videoDeck.length}本の公平なデッキをビルド`);
-  }
-
-  function takeVideo(activeVideoIndices) {
-    if (state.videoDeck.length === 0) refillVideoDeck();
-    if (state.videoDeck.length === 0) return null;
-
-    let deckIndex = state.videoDeck.findIndex(videoIndex => !activeVideoIndices.has(videoIndex));
-    const inactiveVideoIndices = eligibleVideoIndices()
-      .filter(videoIndex => !activeVideoIndices.has(videoIndex));
-    if (deckIndex === -1 && inactiveVideoIndices.length > 0) {
-      // ピン留めなどで巡回の残りがすべて表示中なら、非表示の動画だけで再開し、
-      // 同時表示で同じ動画が重なるのを避ける。
-      state.videoDeck = shuffle(inactiveVideoIndices);
-      deckIndex = 0;
-    }
-    if (deckIndex === -1) deckIndex = 0;
-    const videoIndex = state.videoDeck.splice(deckIndex, 1)[0];
-    state.lastVideoIndex = videoIndex;
-    return videoIndex;
-  }
-
-  function takeScene(videoIndex, excludeKeys) {
-    let deck = state.sceneDecks.get(videoIndex);
-    if (!deck || deck.length === 0) {
-      buildSceneDeck(videoIndex);
-      deck = state.sceneDecks.get(videoIndex);
-    }
-
-    let sceneIndex = deck.findIndex(scene => !excludeKeys.has(scene.key));
-    if (sceneIndex === -1) {
-      buildSceneDeck(videoIndex);
-      deck = state.sceneDecks.get(videoIndex);
-      sceneIndex = deck.findIndex(scene => !excludeKeys.has(scene.key));
-      if (sceneIndex === -1) sceneIndex = 0;
-    }
-
-    const scene = deck.splice(sceneIndex, 1)[0];
-    state.lastSceneKeys.set(videoIndex, scene.key);
-    return scene;
-  }
-
-  // 動画を均等に選び、その動画内の未使用シーンを選ぶ。
-  function popSegment(excludeKeys, activeVideoIndices = new Set()) {
-    const videoIndex = takeVideo(activeVideoIndices);
-    if (videoIndex === null) {
-      return { videoIndex: 0, startTime: 0, key: '0:0' };
-    }
-    return takeScene(videoIndex, excludeKeys);
   }
 
   // ===== Grid Rendering =====
@@ -650,7 +571,7 @@
       if (activeLayer && activeLayer._segKey) {
         const vi = parseInt(activeLayer._segKey.split(':')[0], 10);
         state.blacklistedVideos.add(vi);
-        buildShuffleDecks();
+        shuffleManager.rebuild();
         
         // 除外された動画を表示しているすべてのセルを新しいシーンへ切り替える
         const cells = videoGrid.querySelectorAll('.video-cell');
@@ -940,7 +861,7 @@
     cellsToUpdate.forEach(cell => {
       if (cell.dataset.pinned === "true") return;
 
-      const seg = popSegment(usedInBatch, activeVideoIndices);
+      const seg = shuffleManager.popSegment(usedInBatch, activeVideoIndices);
       usedInBatch.add(seg.key);
       activeVideoIndices.add(seg.videoIndex);
       
@@ -981,7 +902,7 @@
       }
     });
 
-    const seg = popSegment(activeKeys, activeVideoIndices);
+    const seg = shuffleManager.popSegment(activeKeys, activeVideoIndices);
     applySegmentToCell(cell, seg, true, immediate);
     scheduleCellSwitch(cell, false);
   }
@@ -1378,7 +1299,7 @@
     state.interval = normalizeSteppedValue(intervalInput.value, 10, 5, 300, 5);
     intervalInput.value = state.interval;
     saveSetting(localStorage, 'interval', state.interval);
-    buildShuffleDecks();
+    shuffleManager.rebuild();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1388,7 +1309,7 @@
     state.interval = Math.max(5, state.interval - 5);
     intervalInput.value = state.interval;
     saveSetting(localStorage, 'interval', state.interval);
-    buildShuffleDecks();
+    shuffleManager.rebuild();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1398,7 +1319,7 @@
     state.interval = Math.min(300, state.interval + 5);
     intervalInput.value = state.interval;
     saveSetting(localStorage, 'interval', state.interval);
-    buildShuffleDecks();
+    shuffleManager.rebuild();
     if (state.isPlaying) {
       videoGrid.querySelectorAll('.video-cell').forEach(cell => scheduleCellSwitch(cell, true));
     }
@@ -1418,10 +1339,7 @@
       
       state.videoFiles = [];
       state.videoDurations = [];
-      state.videoDeck = [];
-      state.sceneDecks.clear();
-      state.lastVideoIndex = null;
-      state.lastSceneKeys.clear();
+      shuffleManager.reset();
       state.preloadQueue = []; // Clear queue
       state.activePreloads = 0; // Reset counter
       state.blacklistedVideos.clear();

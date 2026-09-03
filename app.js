@@ -178,6 +178,8 @@
     
     cell._history = [];
     cell._historyIndex = -1;
+    let nameElement = null;
+    let timeElement = null;
 
     function setupLayer(isActive) {
       const video = document.createElement('video');
@@ -200,10 +202,10 @@
 
       video.addEventListener('timeupdate', () => {
         if (!video.classList.contains('active')) return;
-        const nameEl = cell.querySelector('.video-cell-name');
-        const timeEl = cell.querySelector('.video-cell-time');
-        if (video._fileName && nameEl) nameEl.textContent = video._fileName;
-        if (timeEl) timeEl.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+        if (video._fileName && nameElement) nameElement.textContent = video._fileName;
+        if (timeElement) {
+          timeElement.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+        }
       });
 
       video.addEventListener('ended', () => {
@@ -226,6 +228,20 @@
       video.addEventListener('pause', () => {
         const activeLayer = cell.querySelector('.video-layer.active');
         if (activeLayer === video) updateCellPlayPauseIcon();
+      });
+
+      video.addEventListener('error', () => {
+        if (!video.classList.contains('active') || video._vi === undefined) return;
+        const failedIndex = video._vi;
+        const failedName = videoLibrary.get(failedIndex)?.file.name || '動画';
+        state.blacklistedVideos.add(failedIndex);
+        shuffleManager.rebuild();
+        showFeedbackToast(`${failedName} を再生できないため除外しました`, 3000);
+        if (state.blacklistedVideos.size < videoLibrary.count()) {
+          assignRandomSceneToCell(cell, true);
+        } else {
+          video.pause();
+        }
       });
 
       return video;
@@ -284,6 +300,8 @@
       </div>
     `;
     cell.appendChild(overlay);
+    nameElement = overlay.querySelector('.video-cell-name');
+    timeElement = overlay.querySelector('.video-cell-time');
 
     // ------------------------------------
     // Attach Event Listeners to Inline Controls
@@ -638,6 +656,8 @@
     if (on) {
       resumeAudioContext();
       startAutoLeveling();
+    } else {
+      audioManager.stop();
     }
     syncAudio();
 
@@ -704,6 +724,7 @@
       if (cell.dataset.pinned === "true") return;
 
       const seg = shuffleManager.popSegment(usedInBatch, activeVideoIndices);
+      if (!seg) return;
       usedInBatch.add(seg.key);
       activeVideoIndices.add(seg.videoIndex);
       
@@ -729,6 +750,7 @@
     });
 
     const seg = shuffleManager.popSegment(activeKeys, activeVideoIndices);
+    if (!seg) return;
     applySegmentToCell(cell, seg, true, immediate);
     scheduleCellSwitch(cell, false);
   }

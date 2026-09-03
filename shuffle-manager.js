@@ -90,7 +90,7 @@
     function popSegment(excludedKeys = new Set(), activeVideoIndices = new Set()) {
       const videoIndex = takeVideo(activeVideoIndices);
       return videoIndex === null
-        ? { videoIndex: 0, startTime: 0, key: '0:0' }
+        ? null
         : takeScene(videoIndex, excludedKeys);
     }
 

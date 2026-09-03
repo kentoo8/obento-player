@@ -31,6 +31,11 @@ test('除外動画を候補に含めない', () => {
   assert.equal(selected.includes(1), false);
 });
 
+test('すべての動画が除外された場合は候補なしを返す', () => {
+  const manager = managerFor([30, 30], new Set([0, 1]));
+  assert.equal(manager.popSegment(), null);
+});
+
 test('可能な場合は表示中の動画を避ける', () => {
   const manager = managerFor([30, 30, 30]);
   const scene = manager.popSegment(new Set(), new Set([0, 1]));

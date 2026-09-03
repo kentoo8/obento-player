@@ -81,6 +81,11 @@
       autoLevelFrameId = requestFrame(tick);
     }
 
+    function stop() {
+      if (autoLevelFrameId) cancelFrame(autoLevelFrameId);
+      autoLevelFrameId = null;
+    }
+
     function initialize(video) {
       if (video._audioSetup) return;
       try {
@@ -115,8 +120,7 @@
     }
 
     function reset() {
-      if (autoLevelFrameId) cancelFrame(autoLevelFrameId);
-      autoLevelFrameId = null;
+      stop();
       for (const video of initializedVideos) {
         for (const node of video._audioNodes || []) node.disconnect?.();
         delete video._audioNodes;
@@ -130,7 +134,7 @@
       audioContext = null;
     }
 
-    return { apply, initialize, reset, resume, start };
+    return { apply, initialize, reset, resume, start, stop };
   }
 
   return { calculateTargetGain, createAudioManager };

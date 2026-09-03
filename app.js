@@ -84,8 +84,8 @@
     isPlaying: () => state.isPlaying,
     random: Math.random,
     renderPlaying: isPlaying => {
-      playIcon.style.display = isPlaying ? 'none' : 'block';
-      pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      playIcon.classList.toggle('u-hidden', isPlaying);
+      pauseIcon.classList.toggle('u-hidden', !isPlaying);
       playAllBtn.setAttribute('aria-pressed', String(isPlaying));
       playAllBtn.setAttribute('aria-label', isPlaying ? 'すべて一時停止' : 'すべて再生');
     },
@@ -273,7 +273,7 @@
     const overlay = document.createElement('div');
     overlay.className = 'video-cell-overlay';
     overlay.innerHTML = `
-      <div class="video-cell-top-bar" style="display: flex; justify-content: flex-start; align-items: flex-start; pointer-events: auto; width: 100%;">
+      <div class="video-cell-top-bar">
         <div class="video-cell-header">
           <span class="video-cell-name"></span>
         </div>
@@ -286,13 +286,13 @@
           <button class="small-seek-btn fwd-btn" title="10秒進む"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg></button>
           <button class="small-seek-btn next-vid-btn" title="次の動画"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
           
-          <button class="small-seek-btn cell-mute-btn" style="margin-left: 12px;" title="ソロ再生（この動画のみ音を出す）">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
+          <button class="small-seek-btn cell-mute-btn control-group-spacer" title="ソロ再生（この動画のみ音を出す）">${state.isAudioOn ? unmuteIconSVG() : muteIconSVG()}</button>
           <button class="small-seek-btn cell-focus-btn" title="単体フォーカス">${focusIconSVG()}</button>
           
           <div class="alt-only-wrapper">
             <button class="small-seek-btn cell-pin-btn" title="ピン留め (Alt+ホバーで表示)">${pinIconSVG()}</button>
           </div>
-          <div class="alt-only-wrapper" style="margin-left: 12px;">
+          <div class="alt-only-wrapper control-group-spacer">
             <button class="small-seek-btn cell-skip-btn" title="この動画をリストから除外する (Alt+ホバーで表示)">${skipIconSVG()}</button>
           </div>
         </div>
@@ -464,7 +464,7 @@
         if (state.isPlaying) scheduleCellSwitch(cell, true);
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
-            c.style.display = '';
+            c.classList.remove('focus-hidden');
             const activeLayer = c.querySelector('.video-layer.active');
             if (activeLayer && state.isPlaying && !c.dataset.wasPausedByFocus) {
               activeLayer.play().catch(()=>{});
@@ -484,7 +484,7 @@
         playbackManager.cancel(cell);
         videoGrid.querySelectorAll('.video-cell').forEach(c => {
           if (c !== cell) {
-            c.style.display = 'none';
+            c.classList.add('focus-hidden');
             const activeLayer = c.querySelector('.video-layer.active');
             if (activeLayer) {
               c.dataset.wasPausedByFocus = activeLayer.paused ? "true" : "";
@@ -662,13 +662,13 @@
     syncAudio();
 
     if (on) {
-      audioOffIcon.style.display = 'none';
-      audioOnIcon.style.display = 'block';
+      audioOffIcon.classList.add('u-hidden');
+      audioOnIcon.classList.remove('u-hidden');
       audioToggleBtn.classList.remove('audio-off');
       audioToggleBtn.classList.add('audio-on');
     } else {
-      audioOffIcon.style.display = 'block';
-      audioOnIcon.style.display = 'none';
+      audioOffIcon.classList.remove('u-hidden');
+      audioOnIcon.classList.add('u-hidden');
       audioToggleBtn.classList.add('audio-off');
       audioToggleBtn.classList.remove('audio-on');
     }
@@ -680,7 +680,7 @@
     if (!volumeSlider) return;
     const val = (volumeSlider.value - volumeSlider.min) / (volumeSlider.max - volumeSlider.min) * 100;
     // 水平スライダーを-90度回転させているため、to right が見た目上の「下から上」になる
-    volumeSlider.style.background = `linear-gradient(to right, var(--accent-primary) ${val}%, rgba(255, 255, 255, 0.1) ${val}%)`;
+    volumeSlider.style.setProperty('--volume-percent', `${val}%`);
     
     if (showTooltip && volumeTooltip) {
       volumeTooltip.textContent = Math.round(state.volume * 100) + '%';
@@ -1224,7 +1224,6 @@
       videoGrid.innerHTML = '';
       emptyState.classList.remove('hidden'); // Use class instead of inline style
       document.body.classList.add('is-app-empty');
-      videoGrid.style.display = ''; // Reset inline style
       
       showFeedbackToast('すべての動画をリセットしました', 2000);
     }

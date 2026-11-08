@@ -45,8 +45,9 @@
   videoLibrary = createVideoLibrary({
     onMetadata: (index, metadata) => {
       if (metadata.duration <= 0) {
-        const name = videoLibrary.get(index)?.file.name || '動画';
-        showFeedbackToast(`${name} の情報を読み込めませんでした`, 3000);
+        state.blacklistedVideos.add(index);
+        shuffleManager.rebuild();
+        return;
       }
       updateVideoOrientation(index, metadata.width, metadata.height);
       shuffleManager.updateScenes(index);
@@ -231,12 +232,14 @@
       video.addEventListener('error', () => {
         if (!video.classList.contains('active') || video._vi === undefined) return;
         const failedIndex = video._vi;
-        const failedName = videoLibrary.get(failedIndex)?.file.name || '動画';
         state.blacklistedVideos.add(failedIndex);
         shuffleManager.rebuild();
-        showFeedbackToast(`${failedName} を再生できないため除外しました`, 3000);
         if (state.blacklistedVideos.size < videoLibrary.count()) {
-          assignRandomSceneToCell(cell, true);
+          if (cell.classList.contains('focused')) {
+            switchFocusedVideo(cell, 1);
+          } else {
+            assignRandomSceneToCell(cell, true);
+          }
         } else {
           video.pause();
         }
@@ -803,6 +806,7 @@
     function seekAndPlay() {
       nextLayer.removeEventListener('loadedmetadata', seekAndPlay);
       nextLayer.removeEventListener('canplay', seekAndPlay);
+      if (state.blacklistedVideos.has(seg.videoIndex)) return;
       
       // 長さ未取得で作成された仮セグメントの場合、実際の長さの範囲でランダムにシーク
       let targetTime = seg.startTime;

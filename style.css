@@ -875,7 +875,7 @@ body.focus-mode .speed-toast {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 8px 8px 0 8px; /* Remove bottom padding */
+  padding: 8px 8px 24px;
   opacity: 0;
   transition: opacity var(--transition-normal);
   pointer-events: none;
@@ -884,6 +884,61 @@ body.focus-mode .speed-toast {
 
 .video-cell:not(.focused):hover .video-cell-overlay {
   opacity: 1;
+}
+
+.video-cell-seek {
+  appearance: none;
+  position: absolute;
+  z-index: 11;
+  left: 8px;
+  bottom: 0;
+  width: calc(100% - 16px);
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.video-cell-seek:disabled {
+  visibility: hidden;
+}
+
+.video-cell-seek:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 5px #191919;
+}
+
+.video-cell-seek::-webkit-slider-runnable-track {
+  height: 4px;
+  border: 1px solid #191919;
+  border-radius: 3px;
+  background: #888;
+}
+
+.video-cell-seek::-moz-range-track {
+  height: 2px;
+  border: 1px solid #191919;
+  border-radius: 3px;
+  background: #888;
+}
+
+.video-cell-seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  border: 1px solid #191919;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.video-cell-seek::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border: 1px solid #191919;
+  border-radius: 50%;
+  background: #fff;
 }
 
 /* ===== Focus Mode Independent Hover Areas ===== */

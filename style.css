@@ -1004,8 +1004,6 @@ body.focus-mode .speed-toast {
 .video-cell-reveal:not([hidden]) {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 2px 8px;
   max-width: 100%;
   min-height: 24px;
   padding: 3px 6px;

@@ -307,7 +307,6 @@
           ${desktop ? `
             <button type="button" class="video-cell-reveal" hidden>
               <span class="video-cell-name"></span>
-              <span>Finderで表示</span>
             </button>` : '<span class="video-cell-name"></span>'}
         </div>
       </div>
@@ -893,6 +892,7 @@
       if (revealButton) {
         revealButton.hidden = false;
         revealButton.title = chosen.file.name;
+        revealButton.setAttribute('aria-label', `${chosen.file.name} をFinderで表示`);
       }
       cell._updatePlaybackControls(nextLayer);
       

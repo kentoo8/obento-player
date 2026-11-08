@@ -2,7 +2,16 @@
   "name": "obento-player",
   "private": true,
   "scripts": {
-    "check": "node --check core.js && node --check settings.js && node --check shuffle-manager.js && node --check video-library.js && node --check audio-manager.js && node --check ui.js && node --check playback-manager.js && node --check app.js",
-    "test": "node --test"
+    "check": "node --check core.js && node --check settings.js && node --check shuffle-manager.js && node --check video-library.js && node --check audio-manager.js && node --check ui.js && node --check playback-manager.js && node --check app.js && node --check desktop/main.cjs",
+    "test": "node --test",
+    "start": "electron .",
+    "package:mac": "electron-packager . 'Obento Player' --platform=darwin --app-bundle-id=jp.obentoplayer.app --out=dist --overwrite --asar --ignore='^/(assets|docs|test|AGENTS\\.md)(/|$)'"
+  },
+  "version": "0.1.0",
+  "productName": "Obento Player",
+  "main": "desktop/main.cjs",
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.2.3"
   }
 }

@@ -178,7 +178,6 @@
     
     cell._history = [];
     cell._historyIndex = -1;
-    let nameElement = null;
     let timeElement = null;
 
     function setupLayer(isActive) {
@@ -202,7 +201,6 @@
 
       video.addEventListener('timeupdate', () => {
         if (!video.classList.contains('active')) return;
-        if (video._fileName && nameElement) nameElement.textContent = video._fileName;
         if (timeElement) {
           timeElement.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
         }
@@ -300,7 +298,6 @@
       </div>
     `;
     cell.appendChild(overlay);
-    nameElement = overlay.querySelector('.video-cell-name');
     timeElement = overlay.querySelector('.video-cell-time');
 
     // ------------------------------------
@@ -311,6 +308,10 @@
     const prevVidBtn = overlay.querySelector('.prev-vid-btn');
     prevVidBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (cell.classList.contains('focused')) {
+        switchFocusedVideo(cell, -1);
+        return;
+      }
       if (cell._historyIndex > 0) {
         cell._historyIndex--;
         const prevSeg = cell._history[cell._historyIndex];
@@ -323,6 +324,10 @@
     const nextVidBtn = overlay.querySelector('.next-vid-btn');
     nextVidBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (cell.classList.contains('focused')) {
+        switchFocusedVideo(cell, 1);
+        return;
+      }
       if (cell._historyIndex < cell._history.length - 1) {
         cell._historyIndex++;
         const nextSeg = cell._history[cell._historyIndex];
@@ -755,7 +760,25 @@
     scheduleCellSwitch(cell, false);
   }
 
+  function findFocusedVideoIndex(cell, direction) {
+    const count = videoLibrary.count();
+    const currentIndex = cell.querySelector('.video-layer.active')?._vi;
+    if (currentIndex === undefined) return;
+
+    for (let offset = 1; offset < count; offset++) {
+      const videoIndex = (currentIndex + direction * offset + count) % count;
+      if (!state.blacklistedVideos.has(videoIndex)) return videoIndex;
+    }
+  }
+
+  function switchFocusedVideo(cell, direction) {
+    const videoIndex = findFocusedVideoIndex(cell, direction);
+    if (videoIndex === undefined) return;
+    applySegmentToCell(cell, { videoIndex, startTime: 0, key: `${videoIndex}:0` });
+  }
+
   function applySegmentToCell(cell, seg, storeInHistory = true, immediate = false) {
+    if (state.blacklistedVideos.has(seg.videoIndex)) return;
     if (storeInHistory) {
       if (cell._historyIndex < cell._history.length - 1) {
         cell._history = cell._history.slice(0, cell._historyIndex + 1);
@@ -773,7 +796,6 @@
     if (!chosen) return;
 
     nextLayer._vi = seg.videoIndex; // Store index for later reference (e.g. rotate toggle)
-    nextLayer._fileName = chosen.file.name;
     nextLayer._segKey = seg.key; // 重複チェック用
     nextLayer._autoGain = 1;
     applyAudioState(nextLayer, nextLayer.muted);
@@ -808,6 +830,7 @@
       // クロスフェード実行
       if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
+      cell.querySelector('.video-cell-name').textContent = chosen.file.name;
       if (cell._updatePlayPauseIcon) cell._updatePlayPauseIcon();
       
       if (activeLayer) {

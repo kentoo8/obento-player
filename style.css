@@ -896,6 +896,14 @@ body.focus-mode .speed-toast {
   opacity: 0;
   pointer-events: auto;
   transition: opacity var(--transition-normal);
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.video-cell.focused .inline-seek-controls {
+  flex-shrink: 1;
+  flex-wrap: wrap;
 }
 
 .video-cell.focused .video-cell-top-bar {
@@ -924,7 +932,9 @@ body.focus-mode .speed-toast {
 }
 
 .video-cell.focused .video-cell-top-bar:hover .video-cell-header,
-.video-cell.focused .video-cell-controls-panel:hover {
+.video-cell.focused:has(.video-cell-controls-panel:hover, .video-cell-controls-panel:focus-within) .video-cell-header,
+.video-cell.focused .video-cell-controls-panel:hover,
+.video-cell.focused .video-cell-controls-panel:focus-within {
   opacity: 1;
 }
 

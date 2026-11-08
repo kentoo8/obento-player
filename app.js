@@ -179,7 +179,26 @@
     
     cell._history = [];
     cell._historyIndex = -1;
-    let timeElement = null;
+    const seekBar = document.createElement('input');
+    seekBar.type = 'range';
+    seekBar.className = 'video-cell-seek';
+    seekBar.min = '0';
+    seekBar.max = '0';
+    seekBar.step = 'any';
+    seekBar.disabled = true;
+    seekBar.setAttribute('aria-label', `動画 ${index + 1} の再生位置`);
+
+    function updatePosition(video) {
+      const canSeek = Number.isFinite(video.duration) && video.duration > 0 && !video.error;
+      const duration = canSeek ? video.duration : 0;
+      const position = canSeek ? video.currentTime : 0;
+      const time = formatTime(position) + ' / ' + formatTime(duration);
+      seekBar.disabled = !canSeek;
+      seekBar.max = String(duration);
+      seekBar.value = String(position);
+      seekBar.setAttribute('aria-valuetext', time);
+      timeElement.textContent = time;
+    }
 
     function setupLayer(isActive) {
       const video = document.createElement('video');
@@ -200,11 +219,16 @@
 
       video.addEventListener('play', () => initWebAudioForVideo(video), { once: true });
 
-      video.addEventListener('timeupdate', () => {
-        if (!video.classList.contains('active')) return;
-        if (timeElement) {
-          timeElement.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+      video.addEventListener('click', () => {
+        if (window.matchMedia('(hover: none)').matches) {
+          cell.classList.toggle('show-touch-controls');
         }
+      });
+
+      ['timeupdate', 'durationchange', 'emptied', 'error'].forEach(event => {
+        video.addEventListener(event, () => {
+          if (video.classList.contains('active')) updatePosition(video);
+        });
       });
 
       video.addEventListener('ended', () => {
@@ -264,8 +288,10 @@
       }
     }
 
-    // セルオブジェクトにメソッドとして公開（applySegmentToCellから呼べるように）
-    cell._updatePlayPauseIcon = updateCellPlayPauseIcon;
+    cell._updatePlaybackControls = video => {
+      updateCellPlayPauseIcon();
+      updatePosition(video);
+    };
 
     setupLayer(true);
     setupLayer(false);
@@ -301,7 +327,15 @@
       </div>
     `;
     cell.appendChild(overlay);
-    timeElement = overlay.querySelector('.video-cell-time');
+    const timeElement = overlay.querySelector('.video-cell-time');
+    overlay.querySelector('.video-cell-controls-panel').prepend(seekBar);
+
+    seekBar.addEventListener('input', () => {
+      const video = cell.querySelector('.video-layer.active');
+      video.currentTime = seekBar.valueAsNumber;
+      updatePosition(video);
+      if (!video.paused) scheduleCellSwitch(cell);
+    });
 
     // ------------------------------------
     // Attach Event Listeners to Inline Controls
@@ -835,7 +869,7 @@
       if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
       cell.querySelector('.video-cell-name').textContent = chosen.file.name;
-      if (cell._updatePlayPauseIcon) cell._updatePlayPauseIcon();
+      cell._updatePlaybackControls(nextLayer);
       
       if (activeLayer) {
         if (immediate) {

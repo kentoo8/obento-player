@@ -882,8 +882,15 @@ body.focus-mode .speed-toast {
   z-index: 10;
 }
 
-.video-cell:not(.focused):hover .video-cell-overlay {
+.video-cell:not(.focused):is(:focus-within, .show-touch-controls) .video-cell-overlay {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .video-cell:not(.focused):hover .video-cell-overlay,
+  .video-cell.focused .video-cell-controls-panel:hover {
+    opacity: 1;
+  }
 }
 
 /* ===== Focus Mode Independent Hover Areas ===== */
@@ -896,14 +903,6 @@ body.focus-mode .speed-toast {
   opacity: 0;
   pointer-events: auto;
   transition: opacity var(--transition-normal);
-  flex-wrap: wrap;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.video-cell.focused .inline-seek-controls {
-  flex-shrink: 1;
-  flex-wrap: wrap;
 }
 
 .video-cell.focused .video-cell-top-bar {
@@ -933,7 +932,7 @@ body.focus-mode .speed-toast {
 
 .video-cell.focused .video-cell-top-bar:hover .video-cell-header,
 .video-cell.focused:has(.video-cell-controls-panel:hover, .video-cell-controls-panel:focus-within) .video-cell-header,
-.video-cell.focused .video-cell-controls-panel:hover,
+.video-cell.focused.show-touch-controls .video-cell-controls-panel,
 .video-cell.focused .video-cell-controls-panel:focus-within {
   opacity: 1;
 }
@@ -942,13 +941,9 @@ body.focus-mode .speed-toast {
 .inline-seek-controls {
   display: flex;
   gap: 5px;
-  flex-shrink: 0;
-  margin-right: 4px;
-}
-
-.video-cell:hover .inline-seek-controls {
-  opacity: 1;
-  pointer-events: auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-width: 0;
 }
 
 .small-seek-btn {
@@ -1007,20 +1002,86 @@ body.focus-mode .speed-toast {
 
 .video-cell-controls-panel {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.3); /* Higher transparency */
+  gap: 0 6px;
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
-  padding: 4px 12px;
-  border-radius: 8px 8px 0 0; /* Only top corners rounded */
+  padding: 0 6px 4px;
+  border-radius: 2px 2px 0 0;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: none;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
   align-self: center;
   width: fit-content;
-  min-width: 280px;
+  max-width: 100%;
+}
+
+.video-cell-seek {
+  appearance: none;
+  flex: 0 0 calc(100% + 12px);
+  width: 0;
+  min-width: 0;
+  height: 24px;
+  /* 線はパネルの上辺よりわずかに内側に置く */
+  margin: -11px -6px 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+}
+
+@media (hover: hover) {
+  .video-cell-seek:hover {
+    opacity: 1;
+    transition-duration: 260ms;
+  }
+}
+
+.video-cell-seek:focus-visible,
+.show-touch-controls .video-cell-seek {
+  opacity: 1;
+  transition: none;
+}
+
+.video-cell-seek:disabled {
+  display: none;
+}
+
+.video-cell-seek:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.video-cell-seek::-webkit-slider-runnable-track {
+  height: 1px;
+  border-radius: 1px;
+  background: #ddd;
+}
+
+.video-cell-seek::-moz-range-track {
+  height: 1px;
+  border-radius: 1px;
+  background: #ddd;
+}
+
+.video-cell-seek::-webkit-slider-thumb {
+  appearance: none;
+  width: 8px;
+  height: 8px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: #eee;
+}
+
+.video-cell-seek::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 50%;
+  background: #eee;
 }
 
 .video-cell-time {
@@ -1165,6 +1226,13 @@ body.focus-mode .empty-state {
 @media (hover: none), (pointer: coarse) {
   .alt-only-wrapper {
     display: flex;
+  }
+}
+
+@media (hover: none) {
+  .video-cell:not(.show-touch-controls) .video-cell-controls-panel:not(:focus-within),
+  .video-cell.focused .video-cell-controls-panel::before {
+    pointer-events: none;
   }
 }
 

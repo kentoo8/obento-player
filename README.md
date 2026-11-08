@@ -25,7 +25,7 @@ npm ci
 npm run package:mac
 ```
 
-`dist` 内の `Obento Player.app` をダブルクリックして起動します。ビルドした Mac と同じ CPU アーキテクチャ向けのアプリが作られます。開発中は `npm start` で起動できます。再生にインターネット接続は不要です。
+`dist` 内の `Obento Player.app`（お弁当箱のアイコン）をダブルクリックして起動します。ビルドした Mac と同じ CPU アーキテクチャ向けのアプリが作られます。開発中は `npm start` で起動できます。再生にインターネット接続は不要です。
 
 ブラウザ版との動作比較には `index.html` を直接開きます。
 

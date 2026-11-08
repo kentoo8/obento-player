@@ -232,14 +232,14 @@
       });
 
       video.addEventListener('ended', () => {
-        if (video.classList.contains('active')) {
-          if (cell.dataset.pinned === "true" || cell.classList.contains('focused')) {
-            // ピン留め中、またはフォーカス中は同じシーンを最初からループ再生
-            video.currentTime = 0;
-            video.play().catch(()=>{});
-          } else {
-            assignRandomSceneToCell(cell);
-          }
+        if (!video.classList.contains('active')) return;
+        if (cell.classList.contains('focused')) {
+          switchFocusedVideo(cell, 1, { playIndividually: !state.isPlaying });
+        } else if (cell.dataset.pinned === "true") {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        } else {
+          assignRandomSceneToCell(cell);
         }
       });
 
@@ -808,13 +808,13 @@
     }
   }
 
-  function switchFocusedVideo(cell, direction) {
+  function switchFocusedVideo(cell, direction, options) {
     const videoIndex = findFocusedVideoIndex(cell, direction);
     if (videoIndex === undefined) return;
-    applySegmentToCell(cell, { videoIndex, startTime: 0, key: `${videoIndex}:0` });
+    applySegmentToCell(cell, { videoIndex, startTime: 0, key: `${videoIndex}:0` }, true, false, options);
   }
 
-  function applySegmentToCell(cell, seg, storeInHistory = true, immediate = false) {
+  function applySegmentToCell(cell, seg, storeInHistory = true, immediate = false, { playIndividually = false } = {}) {
     if (state.blacklistedVideos.has(seg.videoIndex)) return;
     if (storeInHistory) {
       if (cell._historyIndex < cell._history.length - 1) {
@@ -859,7 +859,7 @@
       updateVideoOrientation(seg.videoIndex, nextLayer.videoWidth, nextLayer.videoHeight);
       applyRotationToLayer(nextLayer);
 
-      if (state.isPlaying) {
+      if (state.isPlaying || playIndividually) {
         nextLayer.play().catch(() => {});
       }
       

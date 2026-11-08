@@ -10,7 +10,7 @@
     formatTime,
     normalizeSteppedValue,
   } = window.ObentoCore;
-  const { loadSettings, saveSetting } = window.ObentoSettings;
+  const { PLAYBACK_SPEEDS, loadSettings, saveSetting } = window.ObentoSettings;
   const { createShuffleManager } = window.ObentoShuffle;
   const { createVideoLibrary } = window.ObentoVideoLibrary;
   const { createAudioManager } = window.ObentoAudio;
@@ -28,7 +28,7 @@
     isPlaying: false,
     volume: 0.8,
     isAudioOn: false,     // 全体音声フラグ（ブラウザ自動再生ポリシーに従いデフォルトmuted）
-    playbackSpeed: 1.0,
+    playbackSpeed: savedSettings.playbackSpeed,
     isAutoRotateOn: savedSettings.autoRotateDegree !== 0,
     autoRotateDegree: savedSettings.autoRotateDegree,
     blacklistedVideos: new Set(),
@@ -1140,18 +1140,24 @@
     setDropdownOpen(dropdown, willOpen);
   });
 
+  function renderPlaybackSpeed() {
+    speedDropdownOptions.forEach(option => {
+      const selected = Number(option.dataset.value) === state.playbackSpeed;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-selected', String(selected));
+      if (selected) speedLabel.textContent = option.dataset.value + 'x';
+    });
+  }
+
+  renderPlaybackSpeed();
+
   // Select Speed Option
   speedDropdownOptions.forEach(opt => {
     opt.addEventListener('click', () => {
       const val = parseFloat(opt.dataset.value);
       state.playbackSpeed = val;
-      speedDropdownOptions.forEach(o => {
-        o.classList.remove('active');
-        o.setAttribute('aria-selected', 'false');
-      });
-      opt.classList.add('active');
-      opt.setAttribute('aria-selected', 'true');
-      speedLabel.textContent = val + 'x';
+      saveSetting(localStorage, 'playbackSpeed', val);
+      renderPlaybackSpeed();
       showSpeedToast(val);
       
       // Apply to all active videos
@@ -1406,19 +1412,17 @@
       default:
         if (e.key === '[' || e.key === '［') {
           e.preventDefault();
-          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
-          const curIdx = speeds.indexOf(state.playbackSpeed);
+          const curIdx = PLAYBACK_SPEEDS.indexOf(state.playbackSpeed);
           if (curIdx > 0) {
-            const nextSpeed = speeds[curIdx - 1];
+            const nextSpeed = PLAYBACK_SPEEDS[curIdx - 1];
             const opt = speedDropdownOptions.find(o => parseFloat(o.dataset.value) === nextSpeed);
             if (opt) opt.click();
           }
         } else if (e.key === ']' || e.key === '］') {
           e.preventDefault();
-          const speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0];
-          const curIdx = speeds.indexOf(state.playbackSpeed);
-          if (curIdx < speeds.length - 1) {
-            const nextSpeed = speeds[curIdx + 1];
+          const curIdx = PLAYBACK_SPEEDS.indexOf(state.playbackSpeed);
+          if (curIdx < PLAYBACK_SPEEDS.length - 1) {
+            const nextSpeed = PLAYBACK_SPEEDS[curIdx + 1];
             const opt = speedDropdownOptions.find(o => parseFloat(o.dataset.value) === nextSpeed);
             if (opt) opt.click();
           }

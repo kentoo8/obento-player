@@ -21,12 +21,14 @@ test('許可された保存値を復元する', () => {
     mvp_gridCount: '8',
     mvp_interval: '45',
     mvp_autoRotateDegree: '270',
+    mvp_playbackSpeed: '1.25',
   });
 
   assert.deepEqual(loadSettings(storage), {
     gridCount: 8,
     interval: 45,
     autoRotateDegree: 270,
+    playbackSpeed: 1.25,
   });
 });
 
@@ -35,6 +37,7 @@ test('不正な保存値は既定値へ戻す', () => {
     mvp_gridCount: '3',
     mvp_interval: '12',
     mvp_autoRotateDegree: '180',
+    mvp_playbackSpeed: '1.25x',
   });
 
   assert.deepEqual(loadSettings(storage), DEFAULTS);
@@ -43,7 +46,9 @@ test('不正な保存値は既定値へ戻す', () => {
 test('設定名に対応するキーへ文字列として保存する', () => {
   const storage = createStorage();
   saveSetting(storage, 'interval', 30);
+  saveSetting(storage, 'playbackSpeed', 1.25);
   assert.equal(storage.value('mvp_interval'), '30');
+  assert.equal(storage.value('mvp_playbackSpeed'), '1.25');
 });
 
 test('未知の設定名は保存しない', () => {

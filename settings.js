@@ -9,13 +9,17 @@
     gridCount: 'mvp_gridCount',
     interval: 'mvp_interval',
     autoRotateDegree: 'mvp_autoRotateDegree',
+    playbackSpeed: 'mvp_playbackSpeed',
   };
 
   const DEFAULTS = {
     gridCount: 4,
     interval: 10,
     autoRotateDegree: 0,
+    playbackSpeed: 1,
   };
+
+  const PLAYBACK_SPEEDS = [0.5, 1, 1.25, 1.5, 2, 2.5, 3, 3.5, 4];
 
   function readAllowedNumber(storage, key, allowedValues, fallback) {
     const value = Number.parseInt(storage.getItem(key), 10);
@@ -23,6 +27,7 @@
   }
 
   function loadSettings(storage) {
+    const playbackSpeed = Number(storage.getItem(KEYS.playbackSpeed));
     return {
       gridCount: readAllowedNumber(storage, KEYS.gridCount, [1, 2, 4, 6, 8, 9], DEFAULTS.gridCount),
       interval: readAllowedNumber(
@@ -37,6 +42,7 @@
         [0, 270, 90],
         DEFAULTS.autoRotateDegree
       ),
+      playbackSpeed: PLAYBACK_SPEEDS.includes(playbackSpeed) ? playbackSpeed : DEFAULTS.playbackSpeed,
     };
   }
 
@@ -46,5 +52,5 @@
     storage.setItem(key, String(value));
   }
 
-  return { DEFAULTS, KEYS, loadSettings, saveSetting };
+  return { DEFAULTS, KEYS, PLAYBACK_SPEEDS, loadSettings, saveSetting };
 });

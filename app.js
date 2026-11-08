@@ -179,26 +179,7 @@
     
     cell._history = [];
     cell._historyIndex = -1;
-    const seekBar = document.createElement('input');
-    seekBar.type = 'range';
-    seekBar.className = 'video-cell-seek';
-    seekBar.min = '0';
-    seekBar.max = '0';
-    seekBar.step = 'any';
-    seekBar.disabled = true;
-    seekBar.setAttribute('aria-label', `動画 ${index + 1} の再生位置`);
-
-    function updatePosition(video) {
-      const canSeek = Number.isFinite(video.duration) && video.duration > 0 && !video.error;
-      const duration = canSeek ? video.duration : 0;
-      const position = canSeek ? video.currentTime : 0;
-      const time = formatTime(position) + ' / ' + formatTime(duration);
-      seekBar.disabled = !canSeek;
-      seekBar.max = String(duration);
-      seekBar.value = String(position);
-      seekBar.setAttribute('aria-valuetext', time);
-      timeElement.textContent = time;
-    }
+    let timeElement = null;
 
     function setupLayer(isActive) {
       const video = document.createElement('video');
@@ -219,10 +200,11 @@
 
       video.addEventListener('play', () => initWebAudioForVideo(video), { once: true });
 
-      ['timeupdate', 'durationchange', 'emptied', 'error'].forEach(event => {
-        video.addEventListener(event, () => {
-          if (video.classList.contains('active')) updatePosition(video);
-        });
+      video.addEventListener('timeupdate', () => {
+        if (!video.classList.contains('active')) return;
+        if (timeElement) {
+          timeElement.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration || 0);
+        }
       });
 
       video.addEventListener('ended', () => {
@@ -282,10 +264,8 @@
       }
     }
 
-    cell._updatePlaybackControls = video => {
-      updateCellPlayPauseIcon();
-      updatePosition(video);
-    };
+    // セルオブジェクトにメソッドとして公開（applySegmentToCellから呼べるように）
+    cell._updatePlayPauseIcon = updateCellPlayPauseIcon;
 
     setupLayer(true);
     setupLayer(false);
@@ -321,15 +301,7 @@
       </div>
     `;
     cell.appendChild(overlay);
-    const timeElement = overlay.querySelector('.video-cell-time');
-    cell.appendChild(seekBar);
-
-    seekBar.addEventListener('input', () => {
-      const video = cell.querySelector('.video-layer.active');
-      video.currentTime = seekBar.valueAsNumber;
-      updatePosition(video);
-      if (!video.paused) scheduleCellSwitch(cell);
-    });
+    timeElement = overlay.querySelector('.video-cell-time');
 
     // ------------------------------------
     // Attach Event Listeners to Inline Controls
@@ -863,7 +835,7 @@
       if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
       cell.querySelector('.video-cell-name').textContent = chosen.file.name;
-      cell._updatePlaybackControls(nextLayer);
+      if (cell._updatePlayPauseIcon) cell._updatePlayPauseIcon();
       
       if (activeLayer) {
         if (immediate) {

@@ -1207,7 +1207,7 @@ body.focus-mode .empty-state {
   color: var(--text-muted);
 }
 
-.empty-state-content svg {
+.empty-state-content > svg {
   margin-bottom: 24px;
   opacity: 0.3;
 }

@@ -1006,7 +1006,7 @@ body.focus-mode .speed-toast {
   align-items: center;
   justify-content: center;
   gap: 0 6px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(8px);
   padding: 0 6px 4px;
   border-radius: 2px 2px 0 0;
@@ -1086,7 +1086,7 @@ body.focus-mode .speed-toast {
 
 .video-cell-time {
   font-size: 0.7rem;
-  color: rgba(255,255,255,0.6);
+  color: #fff;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }

@@ -930,6 +930,7 @@ body.focus-mode .speed-toast {
   z-index: -1;
 }
 
+.video-cell.focused .video-cell-header:focus-within,
 .video-cell.focused .video-cell-top-bar:hover .video-cell-header,
 .video-cell.focused:has(.video-cell-controls-panel:hover, .video-cell-controls-panel:focus-within) .video-cell-header,
 .video-cell.focused.show-touch-controls .video-cell-controls-panel,
@@ -998,6 +999,36 @@ body.focus-mode .speed-toast {
   text-overflow: ellipsis;
   white-space: nowrap;
   display: block;
+}
+
+.video-cell-reveal:not([hidden]) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 3px 6px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #17171c;
+  color: #fff;
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.video-cell-reveal .video-cell-name {
+  min-width: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.video-cell-reveal:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .video-cell-controls-panel {

@@ -170,6 +170,8 @@
     }
   }
 
+  const desktop = window.obentoDesktop;
+
   function createVideoCell(index) {
     const cell = document.createElement('div');
     cell.className = 'video-cell';
@@ -302,7 +304,11 @@
     overlay.innerHTML = `
       <div class="video-cell-top-bar">
         <div class="video-cell-header">
-          <span class="video-cell-name"></span>
+          ${desktop ? `
+            <button type="button" class="video-cell-reveal" hidden>
+              <span class="video-cell-name"></span>
+              <span>Finderで表示</span>
+            </button>` : '<span class="video-cell-name"></span>'}
         </div>
       </div>
       <div class="video-cell-controls-panel">
@@ -327,6 +333,19 @@
       </div>
     `;
     cell.appendChild(overlay);
+    const revealButton = overlay.querySelector('.video-cell-reveal');
+    revealButton?.addEventListener('click', async () => {
+      const activeLayer = cell.querySelector('.video-layer.active');
+      const video = videoLibrary.get(activeLayer?._vi);
+      if (!video) return;
+
+      try {
+        if (await desktop.revealFile(video.file)) return;
+      } catch (error) {
+        console.warn('Finder reveal failed:', error);
+      }
+      showFeedbackToast('Finderで表示できません。動画の場所を確認して、追加し直してください。', 4500);
+    });
     const timeElement = overlay.querySelector('.video-cell-time');
     overlay.querySelector('.video-cell-controls-panel').prepend(seekBar);
 
@@ -868,7 +887,13 @@
       // クロスフェード実行
       if (activeLayer) activeLayer.classList.remove('active');
       nextLayer.classList.add('active');
-      cell.querySelector('.video-cell-name').textContent = chosen.file.name;
+      const videoName = cell.querySelector('.video-cell-name');
+      videoName.textContent = chosen.file.name;
+      const revealButton = videoName.closest('.video-cell-reveal');
+      if (revealButton) {
+        revealButton.hidden = false;
+        revealButton.title = chosen.file.name;
+      }
       cell._updatePlaybackControls(nextLayer);
       
       if (activeLayer) {
@@ -995,9 +1020,12 @@
       // こうしないと、最初の await で DataTransfer がクリアされ、2つ目以降の項目にアクセスできなくなる。
       const itemData = items.map(item => {
         if (item.kind !== 'file') return null;
+        const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+        // Electron では FileSystemHandle から得た File に元のパスが付かない。
+        const useNativeEntry = desktop && entry;
         return {
-          handlePromise: item.getAsFileSystemHandle ? item.getAsFileSystemHandle() : null,
-          entry: item.webkitGetAsEntry ? item.webkitGetAsEntry() : null,
+          handlePromise: !useNativeEntry && item.getAsFileSystemHandle ? item.getAsFileSystemHandle() : null,
+          entry,
           file: item.getAsFile()
         };
       }).filter(Boolean);
@@ -1033,6 +1061,10 @@
     if (files.length > 0) {
       addVideoFiles(files);
     } else {
+      if (desktop) {
+        showFeedbackToast('動画ファイルを読み込めませんでした。「追加」から動画を選び直してください。', 4500);
+        return;
+      }
       alert('動画ファイルを読み込めませんでした。\nブラウザのセキュリティ制限により、ローカル環境(file://)ではフォルダのドラッグ＆ドロップが制限されている可能性があります。\n「追加」ボタンから動画を選択するか、モダンブラウザ(Chrome/Edge等)をお試しください。');
     }
   });
@@ -1346,6 +1378,7 @@
     }
 
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.code === 'Space' && e.target.closest('.video-cell-reveal')) return;
 
     switch (e.code) {
       case 'Space':

@@ -930,6 +930,16 @@
 
   // ===== Event Listeners =====
 
+  // ショートカットでは表示を戻さず、キーでフォーカスを移動したときだけ戻す。
+  const hideButtonFocus = () => document.body.classList.add('pointer-input');
+  const showButtonFocus = () => document.body.classList.remove('pointer-input');
+  document.addEventListener('pointerdown', hideButtonFocus, true);
+  document.addEventListener('dragstart', hideButtonFocus, true);
+  document.addEventListener('dragenter', hideButtonFocus, true);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Tab') showButtonFocus();
+  }, true);
+
   const dropdowns = [
     { container: gridDropdown, trigger: gridDropdownBtn, options: gridDropdownOptions },
     { container: speedDropdown, trigger: speedDropdownBtn, options: speedDropdownOptions },
@@ -959,6 +969,7 @@
     dropdown.trigger.addEventListener('keydown', event => {
       if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
+        showButtonFocus();
         closeDropdowns(dropdown);
         setDropdownOpen(dropdown, true, true);
       }
@@ -967,10 +978,12 @@
       const currentIndex = dropdown.options.indexOf(document.activeElement);
       if (event.key === 'Escape') {
         event.preventDefault();
+        showButtonFocus();
         setDropdownOpen(dropdown, false);
         dropdown.trigger.focus();
       } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
+        showButtonFocus();
         const direction = event.key === 'ArrowDown' ? 1 : -1;
         const nextIndex = (Math.max(0, currentIndex) + direction + dropdown.options.length)
           % dropdown.options.length;

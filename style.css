@@ -161,12 +161,14 @@ body.focus-mode header:hover {
 }
 
 .sidebar-collapse-btn:hover,
-.sidebar-collapse-btn:focus-visible {
+body:not(.pointer-input) .sidebar-collapse-btn:focus-visible {
   opacity: 1;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-collapse-btn:hover {
   border-color: var(--border-color);
-  outline: none;
 }
 
 .focus-mode-return-btn {
@@ -194,12 +196,11 @@ body.focus-mode .focus-mode-return-btn {
 }
 
 body.focus-mode .focus-mode-return-btn:hover,
-body.focus-mode .focus-mode-return-btn:focus-visible {
+body.focus-mode:not(.pointer-input) .focus-mode-return-btn:focus-visible {
   opacity: 1;
   transform: translateX(0);
   color: var(--text-primary);
   background: rgba(26, 26, 38, 0.9);
-  outline: none;
 }
 
 
@@ -424,9 +425,31 @@ body.focus-mode .focus-mode-return-btn:focus-visible {
   color: var(--accent-primary);
 }
 
-:where(button, [role="button"], input):focus-visible {
+:where(input):focus-visible {
   outline: 2px solid var(--accent-secondary);
   outline-offset: 3px;
+}
+
+:where(button, [role="button"], [role="option"]) {
+  position: relative;
+}
+
+:where(button, [role="button"], [role="option"]):focus {
+  outline: none;
+}
+
+body:not(.pointer-input) :where(button, [role="button"], [role="option"]):focus-visible::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 12px;
+  height: 5px;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1018,11 +1041,6 @@ body.focus-mode .speed-toast {
   content: '';
   position: absolute;
   inset: -6px 0;
-}
-
-.video-cell-reveal:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
 }
 
 .video-cell-controls-panel {

@@ -937,7 +937,14 @@
   document.addEventListener('dragstart', hideButtonFocus, true);
   document.addEventListener('dragenter', hideButtonFocus, true);
   document.addEventListener('keydown', event => {
-    if (event.key === 'Tab') showButtonFocus();
+    if (event.key === 'Tab') {
+      showButtonFocus();
+    } else if (
+      !event.target.closest('input, select, textarea, [contenteditable="true"]')
+      && ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)
+    ) {
+      hideButtonFocus();
+    }
   }, true);
 
   const dropdowns = [

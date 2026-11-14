@@ -425,7 +425,9 @@ body.focus-mode:not(.pointer-input) .focus-mode-return-btn:focus-visible {
   color: var(--accent-primary);
 }
 
-:where(input):focus {
+/* 動画要素もクリック後のキー入力で標準フォーカス枠を表示する。 */
+:focus,
+:focus-visible {
   outline: none;
 }
 
@@ -439,10 +441,6 @@ body.pointer-input input:focus {
 
 :where(button, [role="button"], [role="option"]) {
   position: relative;
-}
-
-:where(button, [role="button"], [role="option"]):focus {
-  outline: none;
 }
 
 body:not(.pointer-input) :where(button, [role="button"], [role="option"]):focus-visible::after {

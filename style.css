@@ -425,9 +425,16 @@ body.focus-mode:not(.pointer-input) .focus-mode-return-btn:focus-visible {
   color: var(--accent-primary);
 }
 
-:where(input):focus-visible {
-  outline: 2px solid var(--accent-secondary);
-  outline-offset: 3px;
+:where(input):focus {
+  outline: none;
+}
+
+body:not(.pointer-input) input:not([type="range"]):focus-visible {
+  box-shadow: inset 0 -3px 0 #fff;
+}
+
+body.pointer-input input:focus {
+  box-shadow: none;
 }
 
 :where(button, [role="button"], [role="option"]) {
@@ -1083,7 +1090,7 @@ body.focus-mode .speed-toast {
   }
 }
 
-.video-cell-seek:focus-visible,
+body:not(.pointer-input) .video-cell-seek:focus-visible,
 .show-touch-controls .video-cell-seek {
   opacity: 1;
   transition: none;
@@ -1093,9 +1100,14 @@ body.focus-mode .speed-toast {
   display: none;
 }
 
-.video-cell-seek:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: -2px;
+body:not(.pointer-input) input[type="range"]:focus-visible::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+}
+
+body:not(.pointer-input) input[type="range"]:focus-visible::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
 }
 
 .video-cell-seek::-webkit-slider-runnable-track {
@@ -1117,6 +1129,10 @@ body.focus-mode .speed-toast {
   margin-top: -3.5px;
   border-radius: 50%;
   background: #eee;
+}
+
+body:not(.pointer-input) .video-cell-seek:focus-visible::-webkit-slider-thumb {
+  margin-top: -6.5px;
 }
 
 .video-cell-seek::-moz-range-thumb {

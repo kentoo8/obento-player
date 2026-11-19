@@ -12,6 +12,6 @@
   "main": "desktop/main.cjs",
   "devDependencies": {
     "@electron/packager": "20.3.0",
-    "electron": "45.2.3"
+    "electron": "45.4.1"
   }
 }

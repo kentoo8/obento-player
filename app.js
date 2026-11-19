@@ -172,6 +172,17 @@
 
   const desktop = window.obentoDesktop;
 
+  function seekCellBy(cell, seconds) {
+    const activeLayer = cell.querySelector('.video-layer.active');
+    if (!activeLayer) return;
+
+    const targetTime = activeLayer.currentTime + seconds;
+    activeLayer.currentTime = seconds < 0
+      ? Math.max(0, targetTime)
+      : Math.min(activeLayer.duration || 0, targetTime);
+    if (state.isPlaying) scheduleCellSwitch(cell, false);
+  }
+
   function createVideoCell(index) {
     const cell = document.createElement('div');
     cell.className = 'video-cell';
@@ -397,22 +408,14 @@
     const rewBtn = overlay.querySelector('.rew-btn');
     rewBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const activeLayer = cell.querySelector('.video-layer.active');
-      if (activeLayer) {
-        activeLayer.currentTime = Math.max(0, activeLayer.currentTime - 10);
-        if (state.isPlaying) scheduleCellSwitch(cell, false);
-      }
+      seekCellBy(cell, -10);
     });
 
     // Forward
     const fwdBtn = overlay.querySelector('.fwd-btn');
     fwdBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const activeLayer = cell.querySelector('.video-layer.active');
-      if (activeLayer) {
-        activeLayer.currentTime = Math.min(activeLayer.duration || 0, activeLayer.currentTime + 10);
-        if (state.isPlaying) scheduleCellSwitch(cell, false);
-      }
+      seekCellBy(cell, 10);
     });
 
     // Pin toggle
@@ -1459,31 +1462,14 @@
         showVolumeToast();
         break;
       case 'ArrowLeft':
-        {
-          const hoveredCellLeft = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
-          if (hoveredCellLeft) {
-            e.preventDefault();
-            const activeLayer = hoveredCellLeft.querySelector('.video-layer.active');
-            if (activeLayer) {
-              activeLayer.currentTime = Math.max(0, activeLayer.currentTime - 10);
-              if (state.isPlaying) scheduleCellSwitch(hoveredCellLeft, false);
-            }
-          }
+      case 'ArrowRight': {
+        const hoveredCell = Array.from(videoGrid.querySelectorAll('.video-cell')).find(cell => cell.matches(':hover'));
+        if (hoveredCell) {
+          e.preventDefault();
+          seekCellBy(hoveredCell, e.code === 'ArrowLeft' ? -10 : 10);
         }
         break;
-      case 'ArrowRight':
-        {
-          const hoveredCellRight = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
-          if (hoveredCellRight) {
-            e.preventDefault();
-            const activeLayer = hoveredCellRight.querySelector('.video-layer.active');
-            if (activeLayer) {
-              activeLayer.currentTime = Math.min(activeLayer.duration || 0, activeLayer.currentTime + 10);
-              if (state.isPlaying) scheduleCellSwitch(hoveredCellRight, false);
-            }
-          }
-        }
-        break;
+      }
       case 'KeyP':
         {
           const hoveredCellP = Array.from(videoGrid.querySelectorAll('.video-cell')).find(c => c.matches(':hover'));
